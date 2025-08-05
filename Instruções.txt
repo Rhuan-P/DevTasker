@@ -1,0 +1,60 @@
+Exercício de Projeto Django — Sistema To-Do List
+
+
+🎯 Objetivo
+    Desenvolver uma aplicação web funcional utilizando o framework Django, aplicando os
+    conhecimentos de modelagem de dados, views, templates, autenticação e boas práticas de
+    programação.
+📌 Descrição do Projeto
+    O sistema é uma To-Do List (lista de tarefas) com suporte a múltiplos usuários. Cada usuário
+    poderá cadastrar, listar, editar, concluir e excluir suas próprias tarefas.
+✅ Requisitos Funcionais
+1. Autenticação:
+    - Login e logout de usuários.
+    - Cadastro de novos usuários (opcional).
+2. Gerenciamento de Tarefas:
+    - Criar nova tarefa.
+    - Visualizar lista de tarefas do usuário autenticado.
+    - Editar título, descrição e status da tarefa.
+    - Excluir tarefa.
+    - Marcar tarefa como concluída.
+3. Visualização:
+    - Tarefas devem ser exibidas em ordem decrescente de criação.
+    - Indicar visualmente se a tarefa está concluída ou não.
+🔧 Requisitos Técnicos
+    - Django 4.x ou superior.
+    - Banco de dados SQLite.
+    - Uso de Class-Based Views.
+    - Templates HTML com CSS básico.
+    - Implementação de rotas protegidas.
+🧭 Regras de Negócio
+    - Um usuário só pode ver e editar suas próprias tarefas.
+    - Campos obrigatórios: titulo.
+    - Ao excluir um usuário, todas as suas tarefas devem ser removidas automaticamente (via
+    on_delete=models.CASCADE).
+📝 Entrega
+    - Código em repositório público no GitHub do projeto completo.
+    - README explicativo com instruções para:
+    - Instalar dependências.
+    - Rodar o servidor local (python manage.py runserver).
+    - Arquivo .requirements.txt com pacotes utilizados.
+    - O projeto deverá ser desenvolvido individualmente e será apresentado no dia
+        06/08/2025 por meio de uma chamada no Google Meet, com participação da equipe
+        responsável pela avaliação.
+
+
+    O objetivo da apresentação é compreender o estágio atual de cada aluno em relação ao
+    desenvolvimento do sistema e esclarecer dúvidas técnicas.
+
+    - Prazo final para entrega: 06/08/2025, até às 17h (horário de Brasília). Após esse
+        horário, o envio não será considerado válido para avaliação.
+        
+🎯 Critérios de Avaliação
+
+Critério                                            Peso            
+
+Funcionalidades completas                           40%
+Organização do código (Clean Code)                  20%
+Uso correto do Django (Models, Views,Templates)     20%                                   
+Autenticação protegendo rotas                       10%
+Documentação mínima no README                       10%
