@@ -42,3 +42,6 @@ Antes de começar, verifique se você tem os seguintes requisitos instalados:
 4. Instale as dependências do projeto:
 
    pip install -r requirements.txt
+
+## Houve problema ao finalizar o projeto, abri uma issue para trabalhar em cima desse erro, link para ela: https://github.com/Rhuan-P/DevTasker/issues/2
+
