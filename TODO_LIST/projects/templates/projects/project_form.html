@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalhes do Projeto</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+      max-width: 600px;
+      width: 100%;
+    }
+    
+    .btn {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      margin-top: 1rem;
+      border-radius: 0.5rem;
+      text-decoration: none;
+      color: white;
+      background-color: #4f46e5;
+      transition: background-color 0.3s;
+    }
+    
+    .btn:hover {
+      background-color: #4338ca;
+    }
+    
+    .btn-secondary {
+      background-color: #6b7280;
+    }
+    
+    .btn-secondary:hover {
+      background-color: #4b5563;
+    }
+
+    .info-item {
+      margin-bottom: 1rem;
+    }
+
+    .info-item strong {
+      display: inline-block;
+      width: 150px;
+    }
+    form p {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    form label {
+      font-weight: 500;
+    }
+    form input,
+    form textarea,
+    form select {
+      padding: 0.5rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.375rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mx-auto max-w-5xl px-4 py-8">
+    <div class="card mx-auto">
+      <h1 class="text-2xl font-bold mb-4">{% if object %}Editar Projeto{% else %}Criar Projeto{% endif %}</h1>
+      
+      <form method="post" class="space-y-1">
+        {% csrf_token %}
+        {{ form.as_p }}
+      
+      <div class="flex justify-between mt-4">
+          <button type="submit" class="btn">Salvar</button>
+          <a href="{% url 'project-list' %}" class="btn btn-secondary">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
+{% endblock %}

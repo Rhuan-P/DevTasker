@@ -1,0 +1,5 @@
+<h1>Detalhes do Usuário</h1>
+<p>Email: {{ user_obj.email }}</p>
+<p>Nome: {{ user_obj.name }}</p>
+<a href="{% url 'user-edit' user_obj.pk %}">Editar</a> |
+<a href="{% url 'user-list' %}">Voltar para lista</a>

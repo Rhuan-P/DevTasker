@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+<h1>Confirmação de exclusão</h1>
+<p>Tem certeza que deseja deletar o usuário "{{ object.email }}"?</p>
+
+<form method="post">
+  {% csrf_token %}
+  <button type="submit">Sim, deletar</button>
+</form>
+<a href="{% url 'user-list' %}">Cancelar</a>
+{% block content %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Confirmação de Exclusão</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            margin-top: 1rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            color: white;
+            background-color: #e53e3e; /* Cor vermelha para deletar */
+            transition: background-color 0.3s;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            background-color: #c53030; /* Cor mais escura ao passar o mouse */
+        }
+
+        .btn-secondary {
+            background-color: #4f46e5; /* Cor padrão para o botão secundário */
+        }
+
+        .btn-secondary:hover {
+            background-color: #4338ca; /* Cor mais escura ao passar o mouse */
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto">
+        <h1 class="text-2xl font-bold mb-4 text-center">Confirmação de Exclusão</h1>
+        <p class="text-lg text-center mb-4">Tem certeza que deseja deletar o usuário <strong>"{{ object.email }}"</strong>?</p>
+
+        <form method="post" class="text-center">
+            {% csrf_token %}
+            <button type="submit" class="btn">Sim, deletar</button>
+        </form>
+        <div class="text-center mt-4">
+            <a href="{% url 'user-list' %}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </div>
+</body>
+</html>
+{% endblock %}

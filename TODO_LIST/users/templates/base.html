@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <title>{% block title %}Meu Projeto Django{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f7fa;
+        }
+        
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 10;
+        }
+        
+        main {
+            margin-top: 4rem;
+        }
+    </style>
+</head>
+<body>
+    <header class=" fixed top-0 left-0  ">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-indigo-600">Dev Tasker</h1>
+            <nav>
+                <ul class="flex space-x-6">
+                    {% if user.is_authenticated %}
+                        <li><a href="{% url 'profile' %}" class="text-gray-700 hover:text-indigo-600">Perfil</a></li>
+                        <li><a href="{% url 'project-list' %}" class="text-gray-700 hover:text-indigo-600">Projetos</a></li>
+                        
+                        <li>
+                            <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="text-gray-700 hover:text-indigo-600">Sair</button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li><a href="{% url 'login' %}" class="text-gray-700 hover:text-indigo-600">Login</a></li>
+                        <li><a href="{% url 'user-create' %}" class="text-gray-700 hover:text-indigo-600">Registrar-se</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        <hr class="my-4">
+    </header>
+
+    <main class="container mx-auto px-4 py-6 mt-16">
+        {% block content %}
+        <!-- Conteúdo das páginas específicas será inserido aqui -->
+        {% endblock %}
+    </main>
+</body>
+</html>

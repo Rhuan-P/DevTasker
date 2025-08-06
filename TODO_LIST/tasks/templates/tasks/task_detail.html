@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalhes da Tarefa</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      overflow-x: hidden;
+      padding: 2rem;
+    }
+    
+    .container {
+      max-width: 800px;
+      width: 100%;
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+    }
+
+    .info-item {
+      margin-bottom: 1rem;
+    }
+
+    .info-item strong {
+      display: inline-block;
+      width: 150px; /* Largura fixa para alinhamento */
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      margin-top: 1rem;
+      border-radius: 0.5rem;
+      text-decoration: none;
+      color: white;
+      background-color: #4f46e5;
+      transition: background-color 0.3s;
+    }
+    
+    .btn:hover {
+      background-color: #4338ca;
+    }
+    
+    .btn-secondary {
+      background-color: #6b7280;
+    }
+    
+    .btn-secondary:hover {
+      background-color: #4b5563;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mx-auto">
+    <h1 class="text-3xl font-bold mb-4">Detalhes da Tarefa</h1>
+    
+    <div class="info-item">
+      <strong>Nome:</strong> {{ task.name }}
+    </div>
+    <div class="info-item">
+      <strong>Projeto:</strong> {{ task.project.name }}
+    </div>
+    <div class="info-item">
+      <strong>Descrição:</strong> {{ task.description }}
+    </div>
+    <div class="info-item">
+      <strong>Data de início:</strong> {{ task.start_date }}
+    </div>
+    <div class="info-item">
+      <strong>Data de fim:</strong> {{ task.end_date }}
+    </div>
+    <div class="info-item">
+      <strong>Status:</strong> {{ task.get_status_display }}
+    </div>
+    <div class="info-item">
+      <strong>Responsável:</strong> {{ task.assigned_to }}
+    </div>
+    <div class="info-item">
+      <strong>Prioridade:</strong> {{ task.get_priority_display }}
+    </div>
+    <div class="info-item">
+      <strong>Proprietário:</strong> {{ task.owner }}
+    </div>
+   
+
+    <div class="mt-4">
+      <a href="{% url 'task-edit' task.pk %}" class="btn">Editar</a>
+      <a href="{% url 'task-list' %}" class="btn btn-secondary">Voltar</a>
+    </div>
+  </div>
+</body>
+</html>
+{% endblock %}
