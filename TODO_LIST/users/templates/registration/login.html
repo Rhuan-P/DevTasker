@@ -1,0 +1,67 @@
+{% block content %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    
+    .container {
+      max-width: 400px;
+      width: 100%;
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      margin-top: 1rem;
+      border-radius: 0.5rem;
+      text-decoration: none;
+      color: white;
+      background-color: #4f46e5;
+      transition: background-color 0.3s;
+      width: 100%;
+      text-align: center;
+    }
+    
+    .btn:hover {
+      background-color: #4338ca;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mx-auto max-w-xl ">
+    <h2 class="text-2xl font-bold mb-4 text-center">Login</h2>
+
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn">Entrar</button>
+    </form>
+
+    <!-- TODO_LIST/users/templates/registration/login.html -->
+
+ 
+  <p>Não tem conta? <a href="{% url 'user-create' %}">Cadastre-se aqui</a></p>
+
+  </div>
+</body>
+</html>
+{% endblock %}

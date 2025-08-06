@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirmação de Exclusão</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+    }
+    
+    .alert-animation {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+      }
+    }
+    
+    .card-hover {
+      transition: all 0.3s ease;
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    .btn-delete {
+      background: linear-gradient(to right, #ef4444, #dc2626);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-delete:hover {
+      background: linear-gradient(to right, #dc2626, #b91c1c);
+      transform: translateY(-2px);
+    }
+    
+    .btn-cancel {
+      transition: all 0.3s ease;
+    }
+    
+    .btn-cancel:hover {
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <div class="container mx-auto px-4 py-8 max-w-4xl">
+    <div class="text-center mb-8">
+      <div class="flex justify-center mb-4">
+        <div class="p-4 bg-red-100 rounded-full">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+      </div>
+      <h1 class="text-3xl font-bold text-gray-800 mb-2">Confirmar Exclusão</h1>
+      <p class="text-lg text-gray-600">Você está prestes a excluir o projeto <span class="font-semibold text-indigo-600">{{ object.name }}</span></p>
+    </div>
+
+    <div class="flex justify-center">
+      <div class="w-full max-w-md">
+        <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover alert-animation">
+          <div class="p-6">
+            <div class="mb-6">
+              <div class="flex items-start">
+                <div class="flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <h3 class="text-lg font-medium text-yellow-800">Ação irreversível</h3>
+                  <div class="mt-2 text-sm text-yellow-700">
+                    <p>Todos os dados associados a este projeto serão permanentemente removidos. Essa ação não pode ser desfeita.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <form method="post" class="flex flex-col sm:flex-row justify-between gap-4">
+              {% csrf_token %}
+              <button type="submit" class="btn-delete text-white font-bold py-3 px-6 rounded-lg shadow-md">
+                Sim, confirmar exclusão
+              </button>
+              <a href="{% url 'project-list' %}" class="btn-cancel bg-gray-200 text-gray-800 font-bold py-3 px-6 rounded-lg shadow-md hover:bg-gray-300">
+                Cancelar
+              </a>
+            </form>
+          </div>
+        </div>
+
+       
+      </div>
+    </div>
+    
+   
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const deleteBtn = document.querySelector('.btn-delete');
+      
+      deleteBtn.addEventListener('mouseover', function() {
+        this.style.boxShadow = '0 0 15px rgba(239, 68, 68, 0.5)';
+      });
+      
+      deleteBtn.addEventListener('mouseout', function() {
+        this.style.boxShadow = '0 0 5px rgba(239, 68, 68, 0.3)';
+      });
+    });
+  </script>
+</body>
+</html>
+{% endblock %}

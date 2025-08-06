@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Perfil do Usuário</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            margin-top: 1rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            color: white;
+            background-color: #4f46e5;
+            transition: background-color 0.3s;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            background-color: #4338ca;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto">
+        <form action="{% url 'logout' %}" method="post" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn">Sair</button>
+        </form>
+        <h1 class="text-3xl font-bold mb-4 text-center">Perfil de {{ user.name }}</h1>
+        <ul class="list-disc pl-5">
+            <li><strong>Nome:</strong> {{ user.name }}</li>
+            <li><strong>Email:</strong> {{ user.email }}</li>
+          
+            <li><strong>Ativo:</strong> {{ user.is_active }}</li>
+            <li><strong>Superuser:</strong> {{ user.is_superuser }}</li>
+            <li><strong>Staff:</strong> {{ user.is_staff }}</li>
+            <li><strong>Último Login:</strong> {{ user.last_login }}</li>
+        </ul>
+    </div>
+</body>
+</html>
+{% endblock %}

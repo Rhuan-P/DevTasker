@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projetos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      overflow-x: hidden;
+      padding: 2rem;
+    }
+    
+    .container {
+      max-width: 800px;
+      width: 100%;
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      margin-top: 1rem;
+      border-radius: 0.5rem;
+      text-decoration: none;
+      color: white;
+      background-color: #4f46e5;
+      transition: background-color 0.3s;
+    }
+    
+    .btn:hover {
+      background-color: #4338ca;
+    }
+    
+    .btn-secondary {
+      background-color: #6b7280;
+    }
+    
+    .btn-secondary:hover {
+      background-color: #4b5563;
+    }
+
+    .btn-danger {
+      background-color: #ef4444;
+    }
+    
+    .btn-danger:hover {
+      background-color: #dc2626;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mx-auto">
+    <h1 class="text-3xl font-bold mb-4">Deletar Tarefa</h1>
+    <p class="mb-4">Tem certeza que deseja excluir a tarefa <strong>"{{ object.name }}"</strong>?</p>
+    
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      <div class="flex gap-4">
+        <button type="submit" class="btn">Sim, deletar</button>
+        <a href="{% url 'task-list' %}" class="btn btn-secondary">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</body>
+</html>
+{% endblock %}

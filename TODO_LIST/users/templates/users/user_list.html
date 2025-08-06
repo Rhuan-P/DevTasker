@@ -1,0 +1,13 @@
+<h1>Lista de Usuários</h1>
+<a href="{% url 'user-create' %}">Criar novo usuário</a>
+<ul>
+  {% for user in users %}
+    <li>
+      <a href="{% url 'user-detail' user.pk %}">{{ user.email }}</a>
+      - <a href="{% url 'user-edit' user.pk %}">Editar</a>
+      - <a href="{% url 'user-delete' user.pk %}">Deletar</a>
+    </li>
+  {% empty %}
+    <li>Nenhum usuário encontrado.</li>
+  {% endfor %}
+</ul>
