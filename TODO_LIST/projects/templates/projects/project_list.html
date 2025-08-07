@@ -1,102 +1,52 @@
 {% extends "base.html" %}
+{% block title %}Projetos{% endblock %}
 
 {% block content %}
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Projetos</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-    
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      overflow-x: hidden;
-      padding: 2rem;
-    }
-    
-    .container {
-      max-width: 800px;
-      width: 100%;
-      background: white;
-      border-radius: 1rem;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      padding: 2rem;
-    }
+<section class="min-h-[60vh] flex justify-center px-4 py-10">
+  <div class="w-full max-w-4xl bg-white rounded-xl shadow-lg p-8 space-y-6">
 
-    .btn {
-      display: inline-block;
-      padding: 0.5rem 1rem;
-      margin-top: 1rem;
-      border-radius: 0.5rem;
-      text-decoration: none;
-      color: white;
-      background-color: #4f46e5;
-      transition: background-color 0.3s;
-    }
-    
-    .btn:hover {
-      background-color: #4338ca;
-    }
-    
-    .btn-secondary {
-      background-color: #6b7280;
-    }
-    
-    .btn-secondary:hover {
-      background-color: #4b5563;
-    }
+    <!-- Título e botão de novo projeto -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <h1 class="text-3xl font-bold text-gray-800">Projetos</h1>
+      <a href="{% url 'project-create' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition">
+        Criar novo projeto
+      </a>
+    </div>
 
-    .project-item {
-      margin-bottom: 1.5rem;
-      padding: 1rem;
-      border: 1px solid #e5e7eb;
-      border-radius: 0.5rem;
-      transition: background-color 0.3s;
-    }
-
-    .project-item:hover {
-      background-color: #f3f4f6;
-    }
-
-    .project-links {
-      margin-top: 0.5rem;
-      display: flex;
-      gap: 1rem;
-    }
-  </style>
-</head>
-<body>
-  <div class="container mx-auto">
-    <h1 class="text-3xl font-bold mb-4">Projetos</h1>
-    <a href="{% url 'project-create' %}" class="btn">Criar novo projeto</a>
-
-    <ul class="mt-4">
+    <!-- Lista de projetos -->
+    <ul class="space-y-4">
       {% for project in projects %}
-        <li class="project-item">
-          <h2 class="text-xl font-semibold">
-            <a href="{% url 'project-detail' project.pk %}" class="text-indigo-600 hover:underline">{{ project.name }}</a>
-          </h2>
-          <p class="text-gray-600">Proprietário: {{ project.owner }}</p>
-          <p class="text-gray-600">Status: {{ project.status }}</p>
-          <div class="project-links">
-            <a href="{% url 'create_task' project.pk %}" class="btn btn-secondary">Criar Tarefa</a>
-            <a href="{% url 'project-edit' project.pk %}" class="btn">Editar</a>
-            <a href="{% url 'project-delete' project.pk %}" class="btn btn-secondary">Deletar</a>
+        <li class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
+          <div class="flex flex-col gap-1">
+            <h2 class="text-xl font-semibold text-indigo-600">
+              <a href="{% url 'project-detail' project.pk %}" class="hover:underline">{{ project.name }}</a>
+            </h2>
+            <p class="text-gray-600">Proprietário: {{ project.owner }}</p>
+            <p class="text-gray-600">Status: {{ project.get_status_display }}</p>
+          </div>
+
+          <!-- Ações -->
+          <div class="flex flex-wrap gap-2 mt-4">
+            <a href="{% url 'task-create' project.pk %}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-lg shadow transition">
+              Criar Tarefa
+            </a>
+            <a href="{% url 'project-edit' project.pk %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition">
+              Editar
+            </a>
+            <a href="{% url 'project-delete' project.pk %}" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow transition">
+              Deletar
+            </a>
+
+            <a href="{% url 'my-tasks' project.pk %}" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow transition">
+              my tasks
+            </a>
           </div>
         </li>
       {% empty %}
-        <li>Nenhum projeto cadastrado.</li>
+        <li class="text-gray-600">Nenhum projeto cadastrado.</li>
       {% endfor %}
     </ul>
+    
   </div>
-</body>
-</html>
+</section>
 {% endblock %}

@@ -1,71 +1,38 @@
 {% extends "base.html" %}
 
+{% block title %}
+  {% if user_obj %}Editar Usuário{% else %}Criar Usuário{% endif %}
+{% endblock %}
+
 {% block content %}
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>{% if user_obj %}Editar Usuário{% else %}Criar Usuário{% endif %}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-        
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-        }
-        
-        .container {
-            max-width: 600px;
-            width: 100%;
-            background: white;
-            border-radius: 1rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            padding: 2rem;
-        }
+<section class="min-h-[60vh] flex items-center justify-center">
+  <div class="w-full max-w-lg bg-white rounded-xl shadow-lg p-8 space-y-6">
 
-        .btn {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            margin-top: 1rem;
-            border-radius: 0.5rem;
-            text-decoration: none;
-            color: white;
-            background-color: #4f46e5; /* Cor padrão */
-            transition: background-color 0.3s;
-            text-align: center;
-        }
-        
-        .btn:hover {
-            background-color: #4338ca; /* Cor mais escura ao passar o mouse */
-        }
+    <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 text-center">
+      {% if user_obj %}Editar Usuário{% else %}Criar Usuário{% endif %}
+    </h2>
 
-        .btn-secondary {
-            background-color: #6b7280; /* Cor para o botão secundário */
-        }
-
-        .btn-secondary:hover {
-            background-color: #4b5563; /* Cor mais escura ao passar o mouse */
-        }
-    </style>
-</head>
-<body>
-    <div class="container mx-auto">
-        <h2 class="text-2xl font-bold mb-4 text-center">{% if user_obj %}Editar Usuário{% else %}Criar Usuário{% endif %}</h2>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <div class="flex justify-between mt-4">
-                <button type="submit" class="btn">Salvar</button>
-                <a href="{% url 'user-list' %}" class="btn btn-secondary">Cancelar</a>
-            </div>
-        </form>
-    </div>
-</body>
-</html>
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      {% for field in form.visible_fields %}
+        <div class="flex flex-col">
+          <label for="{{ field.id_for_label }}" class="font-medium text-gray-700 mb-1">{{ field.label }}</label>
+          {{ field }}
+          
+          {% for error in field.errors %}
+            <p class="text-sm text-red-600">{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endfor %}
+      <div class="flex flex-col sm:flex-row justify-between gap-4 pt-4">
+        <a href="{% url 'profile' %}" class="w-full sm:w-auto text-center bg-gray-400 hover:bg-gray-500 text-white font-semibold py-3 px-6 rounded-lg shadow transition">
+          Cancelar
+        </a>
+        <button type="submit" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg shadow transition">
+          Salvar
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
 {% endblock %}

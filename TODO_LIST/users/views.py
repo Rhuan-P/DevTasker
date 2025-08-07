@@ -8,10 +8,13 @@ from django.contrib.auth.views import PasswordChangeView
 from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
 from django.views.generic import TemplateView
 
-class UserListView(ListView):
+class UserListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     model = User
     template_name = 'users/user_list.html'
     context_object_name = 'users'
+
+    def test_func(self):
+        return self.request.user.is_staff
 
 class UserDetailView(DetailView):
     model = User

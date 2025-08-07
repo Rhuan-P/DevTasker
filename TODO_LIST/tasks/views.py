@@ -24,7 +24,28 @@ class TaskListView(LoginRequiredMixin, ListView):
     template_name = 'tasks/task_list.html'
     context_object_name = 'tasks'
 
-    
+    def get_queryset(self):
+        return Task.objects.filter(assigned_to=self.request.user)
+
+class TaskListViewbyProject(DetailView):
+    model = Project
+    context_object_name = 'project'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tasks'] = Task.objects.filter(project=self.object)  # todas as tarefas do projeto
+        return context
+
+class AssignedTasksByProjectView(LoginRequiredMixin, ListView):
+    model = Task
+    template_name = 'tasks/task_mytasks.html'  # crie esse template
+    context_object_name = 'tasks'
+
+    def get_queryset(self):
+        project_id = self.kwargs['project_id']
+        user = self.request.user
+
+        return Task.objects.filter(project_id=project_id, assigned_to=user)
 
 class TaskDetailView(TaskAccessMixin, DetailView):
     model = Task
@@ -51,7 +72,7 @@ class TaskCreateView(LoginRequiredMixin, CreateView):
             form.instance.project = project
             form.instance.owner = self.request.user  # <-- Aqui está certo!
         return super().form_valid(form)
-    success_url = reverse_lazy('task-list')
+    success_url = reverse_lazy('project-list')
 
 class TaskUpdateView(TaskAccessMixin, UpdateView):
     model = Task

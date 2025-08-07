@@ -1,106 +1,42 @@
 {% extends "base.html" %}
+{% block title %}Detalhes da Tarefa{% endblock %}
+
 {% block content %}
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Detalhes da Tarefa</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-    
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      overflow-x: hidden;
-      padding: 2rem;
-    }
-    
-    .container {
-      max-width: 800px;
-      width: 100%;
-      background: white;
-      border-radius: 1rem;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      padding: 2rem;
-    }
+<section class="min-h-[60vh] flex justify-center px-4 py-10">
+  <div class="w-full max-w-3xl bg-white rounded-xl shadow-lg p-8 space-y-8">
 
-    .info-item {
-      margin-bottom: 1rem;
-    }
+    <!-- Título -->
+    <div class="text-center sm:text-left">
+      <h1 class="text-3xl font-bold text-gray-800">Detalhes da Tarefa</h1>
+    </div>
 
-    .info-item strong {
-      display: inline-block;
-      width: 150px; /* Largura fixa para alinhamento */
-    }
+    <!-- Informações da Tarefa -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-gray-700 text-base">
+      <div><span class="font-semibold text-gray-900">Nome:</span> {{ task.name }}</div>
+      <div><span class="font-semibold text-gray-900">Projeto:</span> {{ task.project.name }}</div>
+      <div class="sm:col-span-2">
+        <span class="font-semibold text-gray-900">Descrição:</span> {{ task.description }}
+      </div>
+      <div><span class="font-semibold text-gray-900">Data de início:</span> {{ task.start_date }}</div>
+      <div><span class="font-semibold text-gray-900">Data de fim:</span> {{ task.end_date }}</div>
+      <div><span class="font-semibold text-gray-900">Status:</span> {{ task.get_status_display }}</div>
+      <div><span class="font-semibold text-gray-900">Responsável:</span> {{ task.assigned_to }}</div>
+      <div><span class="font-semibold text-gray-900">Prioridade:</span> {{ task.get_priority_display }}</div>
+      <div><span class="font-semibold text-gray-900">Proprietário:</span> {{ task.owner }}</div>
+    </div>
 
-    .btn {
-      display: inline-block;
-      padding: 0.5rem 1rem;
-      margin-top: 1rem;
-      border-radius: 0.5rem;
-      text-decoration: none;
-      color: white;
-      background-color: #4f46e5;
-      transition: background-color 0.3s;
-    }
-    
-    .btn:hover {
-      background-color: #4338ca;
-    }
-    
-    .btn-secondary {
-      background-color: #6b7280;
-    }
-    
-    .btn-secondary:hover {
-      background-color: #4b5563;
-    }
-  </style>
-</head>
-<body>
-  <div class="container mx-auto">
-    <h1 class="text-3xl font-bold mb-4">Detalhes da Tarefa</h1>
-    
-    <div class="info-item">
-      <strong>Nome:</strong> {{ task.name }}
+    <!-- Ações -->
+    <div class="flex flex-col sm:flex-row gap-4 justify-end pt-4">
+      <a href="{% url 'task-update' task.pk %}"
+         class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg shadow text-center">
+        Editar
+      </a>
+      <a href="javascript:history.back()"
+         class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-6 rounded-lg shadow text-center">
+        Voltar
+      </a>
     </div>
-    <div class="info-item">
-      <strong>Projeto:</strong> {{ task.project.name }}
-    </div>
-    <div class="info-item">
-      <strong>Descrição:</strong> {{ task.description }}
-    </div>
-    <div class="info-item">
-      <strong>Data de início:</strong> {{ task.start_date }}
-    </div>
-    <div class="info-item">
-      <strong>Data de fim:</strong> {{ task.end_date }}
-    </div>
-    <div class="info-item">
-      <strong>Status:</strong> {{ task.get_status_display }}
-    </div>
-    <div class="info-item">
-      <strong>Responsável:</strong> {{ task.assigned_to }}
-    </div>
-    <div class="info-item">
-      <strong>Prioridade:</strong> {{ task.get_priority_display }}
-    </div>
-    <div class="info-item">
-      <strong>Proprietário:</strong> {{ task.owner }}
-    </div>
-   
 
-    <div class="mt-4">
-      <a href="{% url 'task-edit' task.pk %}" class="btn">Editar</a>
-      <a href="{% url 'task-list' %}" class="btn btn-secondary">Voltar</a>
-    </div>
   </div>
-</body>
-</html>
+</section>
 {% endblock %}

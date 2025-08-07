@@ -3,7 +3,7 @@ from django.db import models
 from .managers import CustomUserManager
 
 class User(AbstractUser):
-    username = None  # Remove o username padrão
+    username = None 
 
     name = models.CharField(max_length=255)
     email = models.EmailField(unique=True)

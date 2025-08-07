@@ -47,9 +47,9 @@
 </head>
 <body>
     <div class="container mx-auto">
-        <form action="{% url 'logout' %}" method="post" style="display:inline;">
+        <form action="{% url 'task-list' %}" method="post" style="display:inline;">
             {% csrf_token %}
-            <button type="submit" class="btn">Sair</button>
+            <button type="submit" class="btn">Minhas tarefas</button>
         </form>
         <h1 class="text-3xl font-bold mb-4 text-center">Perfil de {{ user.name }}</h1>
         <ul class="list-disc pl-5">

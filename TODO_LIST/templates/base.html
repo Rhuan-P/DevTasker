@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <title>{% block title %}Meu Projeto Django{% endblock %}</title>
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Fonte Poppins via Tailwind plugin opcional -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+        white-space: wrap;        
+        text-overflow: ellipsis;   
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        section>div:first-child {
+            overflow: hidden;
+        }
+        input, select, textarea {
+            background-color:rgba(105, 105, 105, 0.2);
+            border-radius: 0.25rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+
+    <!-- Header fixo -->
+     
+    <header class="fixed top-0 left-0 w-full bg-white shadow z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-indigo-600">Dev Tasker</h1>
+
+            <nav>
+                <ul class="flex space-x-6 items-center">
+                    {% if user.is_authenticated %}
+                        <li>
+                            <a href="{% url 'profile' %}" class="text-gray-700 hover:text-indigo-600 transition">Perfil</a>
+                        </li>
+                        <li>
+                            <a href="{% url 'project-list' %}" class="text-gray-700 hover:text-indigo-600 transition">Projetos</a>
+                        </li>
+                        <li>
+                            <form action="{% url 'logout' %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="text-gray-700 hover:text-indigo-600 transition">Sair</button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li>
+                            <a href="{% url 'login' %}" class="text-gray-700 hover:text-indigo-600 transition">Login</a>
+                        </li>
+                        <li>
+                            <a href="{% url 'user-create' %}" class="text-gray-700 hover:text-indigo-600 transition">Registrar-se</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Espaço para compensar o header fixo -->
+    <div class="h-20"></div>
+
+    <!-- Conteúdo principal da página -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        {% block content %}
+        <!-- Conteúdo específico de cada página -->
+        {% endblock %}
+    </main>
+
+</body>
+</html>

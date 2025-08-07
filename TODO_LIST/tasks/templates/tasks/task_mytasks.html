@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Minhas Tarefas{% endblock %}
+
+{% block content %}
+<section class="min-h-[60vh] flex justify-center px-4 py-10">
+  <div class="w-full max-w-4xl bg-white rounded-xl shadow-lg p-8 space-y-6 font-poppins">
+    
+    <div class="flex justify-between items-center">
+      <h1 class="text-3xl font-bold text-gray-800">Minhas Tarefas no Projeto {{ project.name }}</h1>
+      
+    </div>
+
+    {% if tasks %}
+      <ul class="space-y-4">
+        {% for task in tasks %}
+          <li class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
+            <h2 class="text-xl font-semibold text-indigo-600">
+              <a href="{% url 'task-detail' task.pk %}" class="hover:underline">{{ task.name }}</a>
+            </h2>
+            <p class="text-gray-600 mt-1">Status: {{ task.get_status_display }}</p>
+            <p class="text-gray-600 text-sm">Responsável: {{ task.owner.name }}</p>
+
+            <div class="flex gap-2 mt-4">
+              <a href="{% url 'task-update' task.pk %}" class="bg-gray-600 hover:bg-gray-700 text-white font-medium px-4 py-2 rounded-lg shadow transition">
+                Editar
+              </a>
+              <a href="{% url 'task-delete' task.pk %}" class="bg-red-500 hover:bg-red-600 text-white font-medium px-4 py-2 rounded-lg shadow transition">
+                Deletar
+              </a>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-gray-600">Você não possui tarefas atribuídas neste projeto.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

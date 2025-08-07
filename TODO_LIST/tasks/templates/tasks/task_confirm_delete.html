@@ -1,80 +1,39 @@
 {% extends "base.html" %}
+{% block title %}Deletar Tarefa{% endblock %}
+
 {% block content %}
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Projetos</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-    
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      overflow-x: hidden;
-      padding: 2rem;
-    }
-    
-    .container {
-      max-width: 800px;
-      width: 100%;
-      background: white;
-      border-radius: 1rem;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      padding: 2rem;
-    }
+<section class="min-h-[60vh] flex items-center justify-center px-4 py-10">
+  <div class="w-full max-w-2xl bg-white rounded-xl shadow-lg p-8 space-y-6">
 
-    .btn {
-      display: inline-block;
-      padding: 0.5rem 1rem;
-      margin-top: 1rem;
-      border-radius: 0.5rem;
-      text-decoration: none;
-      color: white;
-      background-color: #4f46e5;
-      transition: background-color 0.3s;
-    }
-    
-    .btn:hover {
-      background-color: #4338ca;
-    }
-    
-    .btn-secondary {
-      background-color: #6b7280;
-    }
-    
-    .btn-secondary:hover {
-      background-color: #4b5563;
-    }
-
-    .btn-danger {
-      background-color: #ef4444;
-    }
-    
-    .btn-danger:hover {
-      background-color: #dc2626;
-    }
-  </style>
-</head>
-<body>
-  <div class="container mx-auto">
-    <h1 class="text-3xl font-bold mb-4">Deletar Tarefa</h1>
-    <p class="mb-4">Tem certeza que deseja excluir a tarefa <strong>"{{ object.name }}"</strong>?</p>
-    
-    <form method="post" class="space-y-4">
-      {% csrf_token %}
-      <div class="flex gap-4">
-        <button type="submit" class="btn">Sim, deletar</button>
-        <a href="{% url 'task-list' %}" class="btn btn-secondary">Cancelar</a>
+    <!-- Cabeçalho -->
+    <div class="flex flex-col items-center text-center space-y-4">
+      <div class="bg-red-100 p-4 rounded-full">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01M5.93 19h12.14c1.5 0 2.45-1.6 1.7-2.89L13.71 4.1c-.75-1.3-2.67-1.3-3.42 0L4.23 16.11c-.75 1.3.2 2.89 1.7 2.89z" />
+        </svg>
       </div>
+      <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Confirmar Exclusão</h1>
+      <p class="text-gray-700 text-base sm:text-lg">
+        Tem certeza que deseja excluir a tarefa 
+        <strong class="text-indigo-600">"{{ object.name }}"</strong>?
+      </p>
+    </div>
+
+    <!-- Formulário de confirmação -->
+    <form method="post" class="flex flex-col sm:flex-row justify-center sm:justify-between gap-4 pt-4">
+      {% csrf_token %}
+      <button type="submit"
+        class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg shadow transition">
+        Sim, deletar
+      </button>
+
+      <a href="javascript:history.back()"
+        class="w-full sm:w-auto text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg shadow transition">
+        Cancelar
+      </a>
     </form>
+
   </div>
-</body>
-</html>
+</section>
 {% endblock %}
