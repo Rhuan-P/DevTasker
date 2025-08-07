@@ -17,6 +17,8 @@ class ProjectListView(LoginRequiredMixin, ListView):
         return Project.objects.filter(
             models.Q(owner=self.request.user) | models.Q(participants=self.request.user)
         ).distinct()
+    
+    
 
 class ProjectAccessMixin(LoginRequiredMixin):
     def dispatch(self, request, *args, **kwargs):

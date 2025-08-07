@@ -10,10 +10,17 @@
 
     <!-- Informações -->
     <div class="space-y-4 text-gray-700">
+
       <div>
         <span class="inline-block font-semibold w-40">Nome:</span>
         {{ project.name }}
       </div>
+
+      <div>
+        <span class="inline-block font-semibold w-40">Proprietário:</span>
+        {{ project.owner }}
+      </div>
+
       <div>
         <span class="inline-block font-semibold w-40">Descrição:</span>
         {{ project.description }}
@@ -61,11 +68,7 @@
           <h3 class="text-lg font-bold text-indigo-600">{{ task.title }}</h3>
           <p class="text-gray-600">{{ task.description|default:"Sem descrição" }}</p>
           <p class="text-sm text-gray-500 mt-1">Responsáveis: 
-            {% for user in task.assigned_to.all() %}
-              {{ user.get_full_name|default:user.username }}{% if not forloop.last %}, {% endif %}
-            {% empty %}
-              Nenhum
-            {% endfor %}
+            {{ task.assigned_to }}
           </p>
           <a href="{% url 'task-detail' task.pk %}" class="text-indigo-600 hover:underline text-sm">Ver detalhes</a>
         </li>
