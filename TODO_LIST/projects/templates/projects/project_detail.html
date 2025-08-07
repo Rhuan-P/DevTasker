@@ -10,14 +10,13 @@
 
     <!-- Informações -->
     <div class="space-y-4 text-gray-700">
-
       <div>
         <span class="inline-block font-semibold w-40">Nome:</span>
         {{ project.name }}
       </div>
 
       <div>
-        <span class="inline-block font-semibold w-40">Proprietário:</span>
+        <span class="inline-block font-semibold w-40">Responsável:</span>
         {{ project.owner }}
       </div>
 
@@ -60,17 +59,25 @@
     </div>
     <div class="mt-8">
   <h2 class="text-xl font-semibold mb-4 text-gray-800">Tarefas deste Projeto</h2>
+
+ <a href="{% url 'task-create' project.pk %}"
+   class="inline-block mb-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition">
+   Adicionar Tarefa
+</a>
+
   
   {% if tasks %}
     <ul class="space-y-4">
       {% for task in tasks %}
         <li class="p-4 border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition">
-          <h3 class="text-lg font-bold text-indigo-600">{{ task.title }}</h3>
+          <h3 class="text-lg font-bold text-indigo-600">{{ task.name }}</h3>
           <p class="text-gray-600">{{ task.description|default:"Sem descrição" }}</p>
           <p class="text-sm text-gray-500 mt-1">Responsáveis: 
             {{ task.assigned_to }}
           </p>
+          {%if task.assigned_to or task.owner == request.user%}
           <a href="{% url 'task-detail' task.pk %}" class="text-indigo-600 hover:underline text-sm">Ver detalhes</a>
+          {%endif%}
         </li>
       {% endfor %}
     </ul>

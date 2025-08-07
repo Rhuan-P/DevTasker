@@ -17,13 +17,25 @@
         <h2 class="text-xl font-semibold">
           <a href="{% url 'task-detail' task.pk %}" class="text-indigo-600 hover:underline">{{ task.name }}</a>
         </h2>
+        <p class="text-gray-600 mt-1">Status: {{ task.get_status_display }}</p>
         <div class="mt-3 flex flex-wrap gap-4">
-          <a href="{% url 'task-update' task.pk %}" class="bg-gray-600 hover:bg-gray-700 text-white rounded px-4 py-2 transition">
-            Editar
-          </a>
-          <a href="{% url 'task-delete' task.pk %}" class="bg-red-600 hover:bg-red-700 text-white rounded px-4 py-2 transition">
-            Deletar
-          </a>
+          {% if task.status != 'completed' and                                                                                    task.status != 'canceled'  %}
+            <a href="{% url 'task-complete' task.pk %}" class="bg-green-600 hover:bg-green-700 text-white rounded px-4 py-2 transition">Concluir</a>
+          {% endif %}
+
+          {% if task.status != 'canceled' %}
+            <a href="{% url 'task-cancel' task.pk %}" class="bg-red-600 hover:bg-red-700 text-white rounded px-4 py-2 transition">Cancelar</a>
+          {% endif %}
+
+          {% if task.status != 'in_progress' %}
+            <a href="{% url 'task-reopen' task.pk %}" class="bg-yellow-500 hover:bg-yellow-600 text-white rounded px-4 py-2 transition">Reabrir</a>
+          {% endif %} 
+          
+          {% if task.owner == request.user %}
+            <a href="{% url 'task-update' task.pk %}" class="bg-gray-600 hover:bg-gray-700 text-white rounded px-4 py-2 transition">
+              Editar
+            </a>
+          {% endif %}
         </div>
       </li>
     {% empty %}

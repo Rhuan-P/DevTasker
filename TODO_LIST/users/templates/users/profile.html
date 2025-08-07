@@ -47,10 +47,7 @@
 </head>
 <body>
     <div class="container mx-auto">
-        <form action="{% url 'task-list' %}" method="post" style="display:inline;">
-            {% csrf_token %}
-            <button type="submit" class="btn">Minhas tarefas</button>
-        </form>
+    
         <h1 class="text-3xl font-bold mb-4 text-center">Perfil de {{ user.name }}</h1>
         <ul class="list-disc pl-5">
             <li><strong>Nome:</strong> {{ user.name }}</li>
@@ -61,6 +58,9 @@
             <li><strong>Staff:</strong> {{ user.is_staff }}</li>
             <li><strong>Último Login:</strong> {{ user.last_login }}</li>
         </ul>
+
+        <a href="{% url 'task-list' %}" class="btn"> Minhas Tarefas</a>
+        <a href="{% url 'project-list' %}" class="btn"> Meus Projetos</a>
     </div>
 </body>
 </html>

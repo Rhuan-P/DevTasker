@@ -2,37 +2,65 @@
 {% block title %}Detalhes da Tarefa{% endblock %}
 
 {% block content %}
-<section class="min-h-[60vh] flex justify-center px-4 py-10">
-  <div class="w-full max-w-3xl bg-white rounded-xl shadow-lg p-8 space-y-8">
+<section class="min-h-[60vh] flex items-start justify-center px-4 py-10">
+  <div class="w-full max-w-3xl bg-white rounded-xl shadow-lg p-8 space-y-6 font-poppins">
 
-    <!-- Título -->
-    <div class="text-center sm:text-left">
-      <h1 class="text-3xl font-bold text-gray-800">Detalhes da Tarefa</h1>
+   
+      <h1 class="text-3xl font-bold mb-4">Detalhes da Tarefa</h1>
+    
+
+    <div class="info-item">
+      <strong class="inline-block w-36">Nome:</strong> {{ task.name }}
     </div>
-
-    <!-- Informações da Tarefa -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-gray-700 text-base">
-      <div><span class="font-semibold text-gray-900">Nome:</span> {{ task.name }}</div>
-      <div><span class="font-semibold text-gray-900">Projeto:</span> {{ task.project.name }}</div>
-      <div class="sm:col-span-2">
-        <span class="font-semibold text-gray-900">Descrição:</span> {{ task.description }}
-      </div>
-      <div><span class="font-semibold text-gray-900">Data de início:</span> {{ task.start_date }}</div>
-      <div><span class="font-semibold text-gray-900">Data de fim:</span> {{ task.end_date }}</div>
-      <div><span class="font-semibold text-gray-900">Status:</span> {{ task.get_status_display }}</div>
-      <div><span class="font-semibold text-gray-900">Responsável:</span> {{ task.assigned_to }}</div>
-      <div><span class="font-semibold text-gray-900">Prioridade:</span> {{ task.get_priority_display }}</div>
-      <div><span class="font-semibold text-gray-900">Proprietário:</span> {{ task.owner }}</div>
+    <div class="info-item">
+      <strong class="inline-block w-36">Projeto:</strong> {{ task.project.name }}
     </div>
+    <div class="info-item">
+      <strong class="inline-block w-36">Descrição:</strong> {{ task.description }}
+    </div>
+    <div class="info-item">
+      <strong class="inline-block w-36">Data de início:</strong> {{ task.start_date }}
+    </div>
+    <div class="info-item">
+      <strong class="inline-block w-36">Data de fim:</strong> {{ task.end_date }}
+    </div>
+    <div class="info-item">
+      <strong class="inline-block w-36">Status:</strong> {{ task.get_status_display }}
+    </div>
+    <div class="info-item">
+      <strong class="inline-block w-36">Responsável:</strong> {{ task.assigned_to }}
+    </div>
+    <div class="info-item">
+      <strong class="inline-block w-36">Prioridade:</strong> {{ task.get_priority_display }}
+    </div>
+    <div class="info-item">
+      <strong class="inline-block w-36">Proprietário:</strong> {{ task.owner }}
+    </div>
+        <div class="flex gap-3 mt-4">
+      {% if task.status != 'completed' %}
+        <a href="{% url 'task-complete' task.pk %}" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded">Concluir</a>
+      {% endif %}
 
-    <!-- Ações -->
-    <div class="flex flex-col sm:flex-row gap-4 justify-end pt-4">
-      <a href="{% url 'task-update' task.pk %}"
-         class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg shadow text-center">
+      {% if task.status != 'canceled' %}
+        <a href="{% url 'task-cancel' task.pk %}" class="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded">Cancelar</a>
+      {% endif %}
+
+      {% if task.status != 'in_progress' %}
+        <a href="{% url 'task-reopen' task.pk %}" class="bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded">Reabrir</a>
+      {% endif %}
+    </div>
+      
+    <div class="flex gap-4 mt-6">
+      {% if task.owner == request.user %}
+      <a href="{% url 'task-update' task.pk %}" class="btn bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded">
         Editar
       </a>
-      <a href="javascript:history.back()"
-         class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-6 rounded-lg shadow text-center">
+      <a href="{% url 'task-delete' task.pk %}" class="btn bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded">
+        Deletar
+      </a>  
+      {% endif %}
+      <a href="javascript:history.back()" 
+         class="btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded">
         Voltar
       </a>
     </div>
