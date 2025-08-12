@@ -12,7 +12,16 @@ wheels = [
 ]
 
 [[package]]
-name = "classwork-plataform"
+name = "countries"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/41/27/d4a3878148d42906f0687f3cad751336c73f63cedf25ce6f0276ed0f0b39/countries-0.2.0.tar.gz", hash = "sha256:d1f6f76d85469f55169982a9a8d2a2fd45b532d96690c1eaf6e275aede898822", size = 13893, upload-time = "2014-07-21T09:08:23.302Z" }
+
+[[package]]
+name = "devtasker"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
@@ -27,15 +36,6 @@ requires-dist = [
     { name = "django", specifier = ">=5.2.5" },
     { name = "django-countries", specifier = ">=7.6.1" },
 ]
-
-[[package]]
-name = "countries"
-version = "0.2.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "django" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/41/27/d4a3878148d42906f0687f3cad751336c73f63cedf25ce6f0276ed0f0b39/countries-0.2.0.tar.gz", hash = "sha256:d1f6f76d85469f55169982a9a8d2a2fd45b532d96690c1eaf6e275aede898822", size = 13893, upload-time = "2014-07-21T09:08:23.302Z" }
 
 [[package]]
 name = "django"
