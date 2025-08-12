@@ -13,8 +13,8 @@ class Task(models.Model):
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
 
-    priority = models.IntegerField(choices=TaskPriority.CHOICES, default=TaskPriority.LOW)
-    status = models.CharField(max_length=20, choices=TaskStatus.CHOICES, default=TaskStatus.IN_PROGRESS)
+    priority = models.CharField(choices=TaskPriority, default=TaskPriority.LOW)
+    status = models.CharField(max_length=20, choices=TaskStatus, default=TaskStatus.IN_PROGRESS)
 
     def __str__(self):
         return self.name

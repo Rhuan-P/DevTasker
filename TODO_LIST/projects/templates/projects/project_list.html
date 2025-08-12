@@ -30,13 +30,14 @@
             <a href="{% url 'task-create' project.pk %}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-lg shadow transition">
               Criar Tarefa
             </a>
+            {% if project.owner == request.user %}
             <a href="{% url 'project-edit' project.pk %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition">
               Editar
             </a>
             <a href="{% url 'project-delete' project.pk %}" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow transition">
               Deletar
             </a>
-
+            {% endif %}
             <a href="{% url 'my-tasks' project.pk %}" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow transition">
               my tasks
             </a>

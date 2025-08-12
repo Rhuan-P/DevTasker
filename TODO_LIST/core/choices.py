@@ -1,38 +1,23 @@
-# tasks/choices.py
+from django.db import models
 
 from django.utils.translation import gettext_lazy as _
 
-class TaskStatus:
-    IN_PROGRESS = 'in_progress'
-    COMPLETED = 'completed'
-    CANCELED = 'canceled'
+class TaskStatus(models.TextChoices):
+    IN_PROGRESS = 'in_progress', 'Em andamento'
+    COMPLETED = 'completed', 'Concluído'
+    CANCELED = 'canceled', 'Cancelado'
 
-    CHOICES = (
-        (IN_PROGRESS, _('Em andamento')),
-        (COMPLETED, _('Concluído')),
-        (CANCELED, _('Cancelado')),
-    )
 
-class TaskPriority:
-    LOW = 1
-    MEDIUM = 2
-    HIGH = 3
+class TaskPriority(models.TextChoices   ):
+    LOW = 'LOW', 'Baixo'
+    MEDIUM = 'MEDIUM', 'Medio'
+    HIGH = 'HIGH', 'Alto'
 
-    CHOICES = (
-        (LOW, _('Low')),
-        (MEDIUM, _('Medium')),
-        (HIGH, _('High')),
-    )
 
-class ProjectStatus:
-    IN_PROGRESS = 'in_progress'
-    COMPLETED = 'completed'
-    CANCELED = 'canceled'
-    PENDENT = 'pendent'
 
-    CHOICES = (
-        (IN_PROGRESS, _('Em andamento')),
-        (COMPLETED, _('Concluído')),
-        (CANCELED, _('Cancelado')),
-        (PENDENT, _('Pendente')),
-    )
+class ProjectStatus(models.TextChoices):
+    IN_PROGRESS = 'in_progress', 'Em andamento'
+    COMPLETED = 'completed', 'Concluído'
+    CANCELED = 'canceled', 'Cancelado'  
+    PENDENT = 'pendent', 'Pendente'
+

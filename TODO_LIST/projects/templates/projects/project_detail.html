@@ -33,8 +33,14 @@
         {{ project.end_date }}
       </div>
       <div>
-        <span class="inline-block font-semibold w-40">Status:</span>
+        <span class="inline-block font-semibold w-40 
+    {% if project.status == 'in_progress' %}text-yellow-500
+    {% elif project.status == 'completed' %}text-green-500
+    {% elif project.status == 'cancelled' %}text-red-500
+    {% elif project.status == 'pending' %}text-orange-500
+    {% endif %}">Status:
         {{ project.get_status_display }}
+        </span>
       </div>
       <div>
         <span class="inline-block font-semibold w-40 align-top">Participantes:</span>
@@ -50,9 +56,11 @@
 
     <!-- Ações -->
     <div class="flex flex-col sm:flex-row justify-between gap-4 pt-4">
+      {%if project.owner == request.user%}
       <a href="{% url 'project-edit' project.pk %}" class="w-full sm:w-auto text-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg shadow transition">
         Editar
       </a>
+      {% endif %}
       <a href="javascript:history.back()" class="w-full sm:w-auto text-center bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-lg shadow transition">
         Voltar
       </a>
@@ -72,11 +80,11 @@
         <li class="p-4 border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition">
           <h3 class="text-lg font-bold text-indigo-600">{{ task.name }}</h3>
           <p class="text-gray-600">{{ task.description|default:"Sem descrição" }}</p>
-          <p class="text-sm text-gray-500 mt-1">Responsáveis: 
+          <p class="text-sm text-gray-500 mt-1">Responsável: 
             {{ task.assigned_to }}
           </p>
-          {%if task.assigned_to or task.owner == request.user%}
-          <a href="{% url 'task-detail' task.pk %}" class="text-indigo-600 hover:underline text-sm">Ver detalhes</a>
+          {% if request.user == task.assigned_to or request.user == task.owner or request.user == project.owner %}
+              <a href="{% url 'task-detail' task.pk %}" class="text-indigo-600 hover:underline text-sm">Ver detalhes</a>
           {%endif%}
         </li>
       {% endfor %}

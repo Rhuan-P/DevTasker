@@ -12,7 +12,7 @@ class Project(models.Model):
     start_date = models.DateField(default=timezone.now)
     end_date = models.DateField(null=True, blank=True)
 
-    status = models.CharField(max_length=20, choices=ProjectStatus.CHOICES, default=ProjectStatus.IN_PROGRESS)
+    status = models.CharField(max_length=20, choices=ProjectStatus, default=ProjectStatus.IN_PROGRESS)
 
 
     def save(self, *args, **kwargs):

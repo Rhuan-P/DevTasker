@@ -18,6 +18,8 @@ class ProjectForm(forms.ModelForm):
         model = Project
         fields = ['name', 'description', 'start_date', 'end_date', 'status']
         widgets = {
+
+            'description': forms.Textarea(attrs={'placeholder': 'Descrição do Projeto', 'class': 'px-4 py-2 border rounded  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'}),  
             'start_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'end_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
         }

@@ -1,77 +1,246 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8" />
-    <title>{% block title %}Meu Projeto Django{% endblock %}</title>
+  <meta charset="utf-8" />
+  <title>{% block title %}Meu Projeto Django{% endblock %}</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
 
-    <!-- Tailwind CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind + Fonte -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Fonte Poppins via Tailwind plugin opcional -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Feather icons -->
+  <script src="https://unpkg.com/feather-icons"></script>
 
-    <style>
-        * {
-        white-space: wrap;        
-        text-overflow: ellipsis;   
-        }
-        body {
-            font-family: 'Poppins', sans-serif;
-        }
-        section>div:first-child {
-            overflow: hidden;
-        }
-        input, select, textarea {
-            background-color:rgba(105, 105, 105, 0.2);
-            border-radius: 0.25rem;
-        }
-    </style>
+  <!-- AG Grid styles (já prontos) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css">
+
+  <style>
+    :root{
+      --sidebar-w: 16rem;        /* 256px */
+      --sidebar-collapsed-w: 4.5rem; /* 72px */
+    }
+
+    html,body { height: 100%; }
+    body { font-family: 'Poppins', sans-serif; }
+
+    /* Sidebar base + transitions */
+    .sidebar {
+      width: var(--sidebar-w);
+      transition: width .22s ease, transform .22s ease;
+    }
+    .sidebar.collapsed { width: var(--sidebar-collapsed-w); }
+
+    /* Esconder labels quando colapsado */
+    .sidebar .label {
+      transition: opacity .18s ease, transform .2s ease;
+      white-space: nowrap;
+    }
+    .sidebar.collapsed .label {
+      opacity: 0;
+      transform: translateX(-6px);
+      pointer-events: none;
+      width: 0;
+      display: inline-block;
+    }
+
+    /* Texto menor para itens */
+    .nav-item { align-items: center; gap: 0.75rem; }
+
+    /* Main content deslocado conforme sidebar */
+    .main {
+      margin-left: var(--sidebar-w);
+      transition: margin-left .22s ease;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .main.shifted { margin-left: var(--sidebar-collapsed-w); }
+
+    /* Mobile drawer behavior */
+    @media (max-width: 1024px) {
+      .sidebar { transform: translateX(-110%); position: fixed; z-index: 60; }
+      .sidebar.mobile-open { transform: translateX(0); box-shadow: 0 10px 30px rgba(0,0,0,.15); }
+      .main { margin-left: 0; }
+      .overlay { display: none; }
+      .overlay.open { display: block; position: fixed; inset:0; background: rgba(0,0,0,.35); z-index:50; }
+    }
+
+    /* Pequeno refinamento visual dos ícones */
+    .nav-icon { width: 20px; height: 20px; flex: 0 0 20px; display:inline-flex; justify-content:center; align-items:center; }
+  </style>
 </head>
-<body class="bg-gray-50 text-gray-800 min-h-screen">
+<body class="bg-gray-50 text-gray-800">
 
-    <!-- Header fixo -->
-     
-    <header class="fixed top-0 left-0 w-full bg-white shadow z-50">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-indigo-600">Dev Tasker</h1>
+  <!-- Overlay mobile -->
+  <div id="overlay" class="overlay lg:hidden"></div>
 
-            <nav>
-                <ul class="flex space-x-6 items-center">
-                    {% if user.is_authenticated %}
-                        <li>
-                            <a href="{% url 'profile' %}" class="text-gray-700 hover:text-indigo-600 transition">Perfil</a>
-                        </li>
-                        <li>
-                            <a href="{% url 'project-list' %}" class="text-gray-700 hover:text-indigo-600 transition">Projetos</a>
-                        </li>
-                        <li>
-                            <form action="{% url 'logout' %}" method="post">
-                                {% csrf_token %}
-                                <button type="submit" class="text-gray-700 hover:text-indigo-600 transition">Sair</button>
-                            </form>
-                        </li>
-                    {% else %}
-                        <li>
-                            <a href="{% url 'login' %}" class="text-gray-700 hover:text-indigo-600 transition">Login</a>
-                        </li>
-                        <li>
-                            <a href="{% url 'user-create' %}" class="text-gray-700 hover:text-indigo-600 transition">Registrar-se</a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </nav>
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar bg-white h-full fixed left-0 top-0 border-r border-gray-200 flex flex-col">
+    <div class="px-4 py-4 flex items-center justify-between border-b border-gray-100">
+      <div class="flex items-center gap-3">
+        <svg class="w-7 h-7 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 7h18M3 12h18M3 17h18" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="font-semibold text-gray-800 label">Dev Tasker</span>
+      </div>
+
+      <!-- Toggle (desktop) -->
+      <button id="collapseBtn" aria-label="Retract sidebar" class="p-2 rounded-md hover:bg-gray-100">
+        <i data-feather="chevron-left"></i>
+      </button>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto px-2 py-4 space-y-1">
+      {% if user.is_authenticated %}
+        <a href="{% url 'profile' %}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100" title="Perfil">
+          <span class="nav-icon"><i data-feather="user"></i></span>
+          <span class="label">Perfil</span>
+        </a>
+
+        <a href="{% url 'project-list' %}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100" title="Projetos">
+          <span class="nav-icon"><i data-feather="folder"></i></span>
+          <span class="label">Projetos</span>
+        </a>
+
+        <a href="{% url 'task-list' %}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100" title="Tarefas">
+          <span class="nav-icon"><i data-feather="check-square"></i></span>
+          <span class="label">Tarefas</span>
+        </a>
+
+        <!-- Submenus simples (exemplo) -->
+        <div class="px-3 pt-2">
+          <div class="text-xs text-gray-400 uppercase tracking-wide label">Ações</div>
+          <div class="mt-1 space-y-1">
+
+            <a href="{% url 'project-create' %}" class="flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100" title="Criar projeto">
+              <span class="nav-icon"><i data-feather="folder-plus"></i></span>
+              <span class="label">Criar projeto</span>
+            </a>
+          </div>
         </div>
+
+        {% if user.is_superuser %}
+          <div class="px-3 pt-3">
+            <div class="text-xs text-gray-400 uppercase tracking-wide label">Admin</div>
+            <a href="{% url 'user-list' %}" class="flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100" title="Listar usuários">
+              <span class="nav-icon"><i data-feather="users"></i></span>
+              <span class="label">Usuários</span>
+            </a>
+          </div>
+        {% endif %}
+
+        <form action="{% url 'logout' %}" method="post" class="px-3 pt-4">
+          {% csrf_token %}
+          <button type="submit" class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-left text-red-600 hover:bg-red-50" title="Sair">
+            <span class="nav-icon"><i data-feather="log-out"></i></span>
+            <span class="label">Sair</span>
+          </button>
+        </form>
+
+      {% else %}
+        <a href="{% url 'login' %}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100" title="Login">
+          <span class="nav-icon"><i data-feather="log-in"></i></span>
+          <span class="label">Login</span>
+        </a>
+        <a href="{% url 'user-create' %}" class="nav-item flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100" title="Registrar">
+          <span class="nav-icon"><i data-feather="user-plus"></i></span>
+          <span class="label">Registrar</span>
+        </a>
+      {% endif %}
+    </nav>
+
+    <div class="px-3 py-4 border-t border-gray-100">
+      <div class="text-xs text-gray-400 label">Versão</div>
+      <div class="text-sm text-gray-600 mt-1 label">v1.0</div>
+    </div>
+  </aside>
+
+  <!-- Conteúdo principal -->
+  <div id="main" class="main">
+    <!-- Topbar compacto -->
+    <header class="w-full flex items-center justify-between px-6 py-3 border-b border-gray-200 bg-white">
+      <div class="flex items-center gap-3">
+        <!-- botão abrir no mobile -->
+        <button id="mobileOpen" class="lg:hidden p-2 rounded-md hover:bg-gray-100" aria-label="Abrir menu">
+          <i data-feather="menu"></i>
+        </button>
+
+        <!-- título da página (cada template pode sobrescrever bloco page_title) -->
+        <h1 class="text-xl font-semibold text-gray-800">{% block page_title %}Dashboard{% endblock %}</h1>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- exemplo de ação rápida -->
+        {% block header_actions %}{% if user.is_authenticated %}
+          <a href="{% url 'profile' %}" class="flex items-center gap-2 text-sm text-gray-700 hover:underline">
+            <i data-feather="user" class="w-4 h-4"></i>
+            <span class="hidden sm:inline">{{ user.name }}</span>
+          </a>
+        {% endif %}{% endblock %}
+      </div>
     </header>
 
-    <!-- Espaço para compensar o header fixo -->
-    <div class="h-20"></div>
-
-    <!-- Conteúdo principal da página -->
-    <main class="max-w-7xl mx-auto px-4 py-8">
-        {% block content %}
-        <!-- Conteúdo específico de cada página -->
-        {% endblock %}
+    <!-- Conteúdo da página -->
+    <main class="p-6 flex-1 overflow-auto">
+      {% block content %}{% endblock %}
     </main>
+  </div>
 
+  <!-- AG Grid JS (sem estilos - já adicionamos acima) -->
+  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
+
+  <!-- Script: controle do sidebar (colapso + mobile + persistência) -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const sidebar = document.getElementById('sidebar');
+      const main = document.getElementById('main');
+      const collapseBtn = document.getElementById('collapseBtn');
+      const mobileOpen = document.getElementById('mobileOpen');
+      const overlay = document.getElementById('overlay');
+
+      // Feather icons
+      if (typeof feather !== 'undefined') { feather.replace() }
+
+      // Recupera estado salvo (open/closed)
+      const saved = localStorage.getItem('sidebarCollapsed');
+      if (saved === 'true') {
+        sidebar.classList.add('collapsed');
+        main.classList.add('shifted');
+      }
+
+      // Toggle desktop collapse
+      collapseBtn.addEventListener('click', function () {
+        const collapsed = sidebar.classList.toggle('collapsed');
+        main.classList.toggle('shifted');
+        localStorage.setItem('sidebarCollapsed', collapsed ? 'true' : 'false');
+        // alterna o ícone direction
+        const icon = collapseBtn.querySelector('i');
+        if (icon) icon.dataset.feather = collapsed ? 'chevron-right' : 'chevron-left';
+        if (typeof feather !== 'undefined') feather.replace();
+      });
+
+      // Mobile: abrir sidebar como drawer
+      mobileOpen.addEventListener('click', function () {
+        sidebar.classList.add('mobile-open');
+        overlay.classList.add('open');
+      });
+
+      // Fechar clicando no overlay
+      overlay.addEventListener('click', function () {
+        sidebar.classList.remove('mobile-open');
+        overlay.classList.remove('open');
+      });
+
+      // Fechar sidebar com ESC quando aberto no mobile
+      document.addEventListener('keydown', function(e){
+        if(e.key === 'Escape') {
+          sidebar.classList.remove('mobile-open');
+          overlay.classList.remove('open');
+        }
+      });
+
+      // Adiciona tooltip nativo já (title) — o `title` foi definido nas <a> para quando estiver colapsado.
+    });
+  </script>
 </body>
 </html>

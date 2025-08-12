@@ -15,7 +15,7 @@ class TaskAccessMixin(LoginRequiredMixin):
     def dispatch(self, request, *args, **kwargs):
         task = self.get_object()
         user = request.user
-        if user != task.owner and user!= task.assigned_to:
+        if user != task.owner and user!= task.assigned_to and user != task.project.owner:
             raise PermissionDenied("Você não tem permissão para acessar esta tarefa.")
         return super().dispatch(request, *args, **kwargs)
 

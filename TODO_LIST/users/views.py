@@ -16,7 +16,7 @@ class UserListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     def test_func(self):
         return self.request.user.is_staff
 
-class UserDetailView(DetailView):
+class UserDetailView(LoginRequiredMixin, DetailView):
     model = User
     template_name = 'users/user_detail.html'
     context_object_name = 'user_obj'  # evita conflito com user logado
@@ -27,7 +27,7 @@ class UserCreateView(CreateView):
     template_name = 'users/user_form.html'
     success_url = reverse_lazy('project-list')
 
-class UserUpdateView(UpdateView):
+class UserUpdateView(LoginRequiredMixin, UpdateView):
     model = User
     form_class = CustomUserChangeForm
     template_name = 'users/user_form.html'
@@ -39,7 +39,7 @@ class UserDeleteView(DeleteView):
     success_url = reverse_lazy('user-list')
 
 class UserProfileView(LoginRequiredMixin, TemplateView):
-    template_name = 'users/profile.html'
+    template_name = 'users/user_profile.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -50,18 +50,16 @@ class UserProfileView(LoginRequiredMixin, TemplateView):
 
 class UserPasswordChangeView(UserPassesTestMixin, PasswordChangeView):
     template_name = 'users/user_change_password.html'
-    success_url = reverse_lazy('user-list')
+    success_url = reverse_lazy('user-profile')
 
-    def get_user(self):
+    def get_object(self):
         return get_object_or_404(User, pk=self.kwargs['pk'])
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs['user'] = self.get_user()
+        kwargs['user'] = self.get_object()
         return kwargs
 
-
-
     def test_func(self):
-        # Somente staff/admin pode alterar a senha de outro usuário
+        # Somente staff/admin pode alterar a senha de outro usu rio
         return self.request.user.is_staff
