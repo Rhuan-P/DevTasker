@@ -148,58 +148,92 @@ class TaskDeleteView(TaskAccessMixin, DeleteView):
 
 
 # =============== MÉTRICAS =================
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
-from django.urls import reverse_lazy
-from django.shortcuts import render, redirect, get_object_or_404
-from django.core.exceptions import PermissionDenied
-from django.views.generic.detail import SingleObjectMixin
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import TemplateView
 from django.utils import timezone
 from django.views import View
 from django.http import JsonResponse
 from django.db.models import Count, Q, F
 
 from .models import Task
-from .forms import TaskForm
-from projects.models import Project
 from core.choices import TaskStatus, TaskPriority
 
-
 class TaskMetricsView(LoginRequiredMixin, View):
+    """
+    API JSON com métricas e listas auxiliares:
+      - total_tasks
+      - completed_this_month
+      - overdue_tasks
+      - tasks_in_risk_count, tasks_in_risk (amostra)
+      - status_counts [{status,label,count},...]
+      - priority_counts [{priority,label,count},...]
+      - avg_completion_time_days (float) ou null
+      - completed_tasks_by_date (serie)
+    """
+    RISK_DAYS = 3  # margem em dias para considerar "em risco"
+
     def get(self, request, *args, **kwargs):
         user = request.user
         if user.is_superuser:
             tasks = Task.objects.all()
         else:
             tasks = Task.objects.filter(Q(owner=user) | Q(assigned_to=user))
-        
+
         now = timezone.now()
-        start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         today = now.date()
+        start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
         total_tasks = tasks.count()
         completed_this_month = tasks.filter(status=TaskStatus.COMPLETED, completed_at__gte=start_of_month).count()
         overdue_tasks = tasks.filter(end_date__lt=today).exclude(status=TaskStatus.COMPLETED).count()
 
+        # status / priority counts (com labels)
         status_counts = []
-        for status_val, label in TaskStatus.choices:
-            count = tasks.filter(status=status_val).count()
-            status_counts.append({'status': status_val, 'label': label, 'count': count})
+        for val, label in TaskStatus.choices:
+            cnt = tasks.filter(status=val).count()
+            status_counts.append({'status': val, 'label': label, 'count': cnt})
 
         priority_counts = []
-        for priority_val, label in TaskPriority.choices:
-            count = tasks.filter(priority=priority_val).count()
-            priority_counts.append({'priority': priority_val, 'label': label, 'count': count})
+        for val, label in TaskPriority.choices:
+            cnt = tasks.filter(priority=val).count()
+            priority_counts.append({'priority': val, 'label': label, 'count': cnt})
 
-        # Série temporal: completadas últimos 30 dias
+        # tarefas em risco: end_date entre hoje e hoje+RISK_DAYS (inclui hoje)
+        risk_cutoff = today + timezone.timedelta(days=self.RISK_DAYS)
+        tasks_in_risk_qs = tasks.filter(end_date__gte=today, end_date__lte=risk_cutoff).exclude(status=TaskStatus.COMPLETED)
+        tasks_in_risk_count = tasks_in_risk_qs.count()
+        tasks_in_risk_sample = []
+        for t in tasks_in_risk_qs.select_related('project', 'owner', 'assigned_to')[:50]:
+            tasks_in_risk_sample.append({
+                'id': t.id,
+                'name': t.name,
+                'project': {'id': t.project_id, 'name': t.project.name if t.project else None},
+                'owner': {'id': t.owner_id, 'name': getattr(t.owner, 'name', str(t.owner))},
+                'assigned_to': {'id': t.assigned_to_id, 'name': getattr(t.assigned_to, 'name', None) if t.assigned_to else None},
+                'end_date': t.end_date.isoformat() if t.end_date else None,
+                'status': t.status,
+                'status_display': t.get_status_display(),
+            })
+
+        # avg completion time (dias) — só tasks completadas que tenham start_date
+        completed_qs = tasks.filter(status=TaskStatus.COMPLETED, completed_at__isnull=False, start_date__isnull=False)
+        total_days = 0
+        count_completed = 0
+        for t in completed_qs:
+            # diferença em dias entre completed_at (datetime) e start_date (date)
+            delta = (t.completed_at.date() - t.start_date).days
+            total_days += delta
+            count_completed += 1
+        avg_completion_time_days = round((total_days / count_completed), 2) if count_completed else None
+
+        # série temporal (últimos 30 dias) — completadas por dia
         days_series = 30
-        start_date = today - timezone.timedelta(days=days_series-1)
-        completed_qs = (
+        start_date = today - timezone.timedelta(days=days_series - 1)
+        completed_by_date_qs = (
             tasks.filter(status=TaskStatus.COMPLETED, completed_at__date__gte=start_date)
                  .values('completed_at__date')
                  .annotate(count=Count('id'))
         )
-        counts_map = {entry['completed_at__date']: entry['count'] for entry in completed_qs}
+        counts_map = {entry['completed_at__date']: entry['count'] for entry in completed_by_date_qs}
         completed_tasks_by_date = []
         for i in range(days_series):
             d = start_date + timezone.timedelta(days=i)
@@ -209,21 +243,27 @@ class TaskMetricsView(LoginRequiredMixin, View):
             'total_tasks': total_tasks,
             'completed_this_month': completed_this_month,
             'overdue_tasks': overdue_tasks,
+            'tasks_in_risk_count': tasks_in_risk_count,
+            'tasks_in_risk': tasks_in_risk_sample,
             'status_counts': status_counts,
             'priority_counts': priority_counts,
+            'avg_completion_time_days': avg_completion_time_days,
             'completed_tasks_by_date': completed_tasks_by_date,
+            'risk_days': self.RISK_DAYS,
         }
-
         return JsonResponse(data)
 
+
 class TaskListAPIView(LoginRequiredMixin, View):
+    """
+    Lista de tasks em JSON para popular a tabela (limite 50).
+    """
     def get(self, request, *args, **kwargs):
         user = request.user
         if user.is_superuser:
             qs = Task.objects.all()
         else:
             qs = Task.objects.filter(Q(owner=user) | Q(assigned_to=user))
-
         qs = qs.select_related('project', 'owner', 'assigned_to')[:50]
 
         data = []
@@ -247,11 +287,12 @@ class TaskListAPIView(LoginRequiredMixin, View):
 
 class TaskMetricsDashboardView(LoginRequiredMixin, TemplateView):
     """
-    Renderiza o dashboard com métricas e dados para gráficos.
+    Renderiza o dashboard (server-side). Contexto contém os mesmos dados
+    que a API, útil se preferir render server-side.
     """
-
     template_name = 'tasks/task_metrics.html'
     days_series = 30
+    RISK_DAYS = 3
 
     def _human_name(self, user_obj):
         if not user_obj:
@@ -264,7 +305,6 @@ class TaskMetricsDashboardView(LoginRequiredMixin, TemplateView):
         now = timezone.now()
         today = now.date()
 
-        # Query base (todas para superuser, só visíveis para outros)
         if user.is_superuser:
             qs = Task.objects.all()
         else:
@@ -272,59 +312,54 @@ class TaskMetricsDashboardView(LoginRequiredMixin, TemplateView):
 
         qs = qs.select_related('project', 'owner', 'assigned_to')
 
-        # Total de tasks
         total_tasks = qs.count()
 
-        # Status counts com labels legíveis
-        raw_status = qs.values('status').annotate(count=Count('id'))
         status_counts = []
-        for r in raw_status:
-            val = r.get('status')
-            try:
-                label = TaskStatus(val).label
-            except Exception:
-                label = val
-            status_counts.append({'status': val, 'label': label, 'count': r.get('count', 0)})
+        for val, label in TaskStatus.choices:
+            status_counts.append({'status': val, 'label': label, 'count': qs.filter(status=val).count()})
 
-        # Priority counts com labels legíveis
-        raw_pr = qs.values('priority').annotate(count=Count('id'))
         priority_counts = []
-        for r in raw_pr:
-            val = r.get('priority')
-            try:
-                label = TaskPriority(val).label
-            except Exception:
-                label = val
-            priority_counts.append({'priority': val, 'label': label, 'count': r.get('count', 0)})
+        for val, label in TaskPriority.choices:
+            priority_counts.append({'priority': val, 'label': label, 'count': qs.filter(priority=val).count()})
 
-        # Completadas no mês atual
         start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        completed_this_month = qs.filter(
-            status=TaskStatus.COMPLETED,
-            completed_at__gte=start_of_month
-        ).count()
-
-        # Atrasadas
+        completed_this_month = qs.filter(status=TaskStatus.COMPLETED, completed_at__gte=start_of_month).count()
         overdue_tasks = qs.filter(end_date__lt=today).exclude(status=TaskStatus.COMPLETED).count()
 
-        # Série temporal últimas N dias (completadas por dia)
-        start_date = today - timezone.timedelta(days=self.days_series - 1)
-        completed_qs = qs.filter(
-            status=TaskStatus.COMPLETED,
-            completed_at__date__gte=start_date
-        ).values('completed_at__date').annotate(count=Count('id')).order_by('completed_at__date')
-        counts_map = {c['completed_at__date']: c['count'] for c in completed_qs}
+        # tasks in risk
+        risk_cutoff = today + timezone.timedelta(days=self.RISK_DAYS)
+        tasks_in_risk_qs = qs.filter(end_date__gte=today, end_date__lte=risk_cutoff).exclude(status=TaskStatus.COMPLETED)
+        tasks_in_risk_count = tasks_in_risk_qs.count()
+        tasks_in_risk_sample = []
+        for t in tasks_in_risk_qs[:50]:
+            tasks_in_risk_sample.append({
+                'id': t.id,
+                'name': t.name,
+                'project': {'id': t.project_id, 'name': t.project.name if t.project else None},
+                'assigned_to': {'id': t.assigned_to_id, 'name': self._human_name(t.assigned_to) if t.assigned_to else None},
+                'end_date': t.end_date.isoformat() if t.end_date else None,
+                'status': t.status,
+            })
 
+        # avg completion time (dias)
+        completed_qs = qs.filter(status=TaskStatus.COMPLETED, completed_at__isnull=False, start_date__isnull=False)
+        total_days = 0
+        count_completed = 0
+        for t in completed_qs:
+            total_days += (t.completed_at.date() - t.start_date).days
+            count_completed += 1
+        avg_completion_time_days = round((total_days / count_completed), 2) if count_completed else None
+
+        # completed by date series
+        start_date = today - timezone.timedelta(days=self.days_series - 1)
+        completed_qs_agg = qs.filter(status=TaskStatus.COMPLETED, completed_at__date__gte=start_date)\
+                             .values('completed_at__date').annotate(count=Count('id')).order_by('completed_at__date')
+        counts_map = {c['completed_at__date']: c['count'] for c in completed_qs_agg}
         completed_tasks_by_date = []
         for i in range(self.days_series):
             d = start_date + timezone.timedelta(days=i)
             completed_tasks_by_date.append({'date': d.strftime('%Y-%m-%d'), 'count': counts_map.get(d, 0)})
 
-        # Tarefas por projeto (nome e contagem)
-        proj_qs = qs.values(project_name=F('project__name')).annotate(count=Count('id')).order_by('project_name')
-        tasks_by_project = [{'project_name': p['project_name'] or '—', 'count': p['count']} for p in proj_qs]
-
-        # Amostra para tabela (limite 50)
         sample_tasks = []
         for t in qs[:50]:
             sample_tasks.append({
@@ -348,10 +383,12 @@ class TaskMetricsDashboardView(LoginRequiredMixin, TemplateView):
             'priority_counts': priority_counts,
             'completed_this_month': completed_this_month,
             'overdue_tasks': overdue_tasks,
+            'tasks_in_risk_count': tasks_in_risk_count,
+            'tasks_in_risk': tasks_in_risk_sample,
+            'avg_completion_time_days': avg_completion_time_days,
             'completed_tasks_by_date': completed_tasks_by_date,
-            'tasks_by_project': tasks_by_project,
             'sample_tasks': sample_tasks,
             'days_series': self.days_series,
+            'risk_days': self.RISK_DAYS,
         })
-
         return ctx

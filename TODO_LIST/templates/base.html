@@ -17,26 +17,14 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css">
 
   <style>
-    :root {
-      --sidebar-w: 16rem;         /* 256px */
-      --sidebar-collapsed-w: 4.5rem; /* 72px */
-    }
-
-    /* evita barra horizontal */
+    :root { --sidebar-w: 16rem; }
     html, body { height: 100%; overflow-x: hidden; }
+    body { font-family: 'Poppins', sans-serif; background-color: #f9fafb; color: #374151; margin: 0; }
 
-    body {
-      font-family: 'Poppins', sans-serif;
-      background-color: #f9fafb;
-      color: #374151;
-      margin: 0;
-    }
-
-    /* Sidebar */
+    /* Sidebar sempre no modo overlay */
     .sidebar {
       width: var(--sidebar-w);
       box-sizing: border-box;
-      transition: width .22s ease, transform .22s ease, background-color .3s ease;
       background-color: #fff;
       height: 100vh;
       position: fixed;
@@ -45,125 +33,57 @@
       border-right: 1px solid #e5e7eb;
       display: flex;
       flex-direction: column;
-      z-index: 60;
+      z-index: 70;
       overflow: hidden;
+      transform: translateX(-110%);
+      transition: transform .22s ease, background-color .3s ease;
     }
-    .sidebar.collapsed { width: var(--sidebar-collapsed-w); }
+    .sidebar.mobile-open {
+      transform: translateX(0);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
 
-    /* Sidebar header (nome/email sem imagem) */
-    .sidebar-user {
-      padding: 0.875rem;
-      border-bottom: 1px solid #e6eef6;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      background-color: #fbfbfe;
-    }
-    .sidebar-user .user-initial {
-      width: 36px;
-      height: 36px;
-      border-radius: 9999px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      color: white;
-      background: linear-gradient(135deg,#6366f1,#4f46e5);
-      flex-shrink: 0;
-    }
+    .sidebar-user { padding: 0.875rem; border-bottom: 1px solid #e6eef6; display: flex; align-items: center; gap: 0.75rem; background-color: #fbfbfe; }
+    .user-initial { width: 36px; height: 36px; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; color: white; background: linear-gradient(135deg,#6366f1,#4f46e5); flex-shrink: 0; }
     .sidebar-user-info p { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-    /* Labels */
-    .sidebar .label {
-      transition: opacity .18s ease, transform .2s ease;
-      white-space: nowrap;
-    }
-    .sidebar.collapsed .label {
-      opacity: 0;
-      transform: translateX(-6px);
-      pointer-events: none;
-      width: 0;
-      display: inline-block;
-    }
-
-    /* Nav items */
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.5rem 0.75rem;
-      border-radius: 0.375rem;
-      color: #374151;
-      text-decoration: none;
-      transition: background-color .15s ease, color .15s ease;
-      font-weight: 500;
-    }
+    .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.75rem; border-radius: 0.375rem; color: #374151; text-decoration: none; transition: background-color .15s ease, color .15s ease; font-weight: 500; }
     .nav-item:hover { background-color: #f3f4f6; color: #111827; }
     .nav-item.active { background-color: #e6edff; color: #4338ca; font-weight: 600; }
     .nav-icon { width: 20px; height: 20px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
 
-    /* Main content */
     .main {
-      margin-left: var(--sidebar-w);
-      transition: margin-left .22s ease, background-color .3s ease;
+      margin-left: 0 !important;
+      transition: background-color .3s ease;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       background-color: #f9fafb;
-      min-width: 0; /* evita overflow horizontal em flex children */
+      min-width: 0;
     }
-    .main.shifted { margin-left: var(--sidebar-collapsed-w); }
 
-    /* Topbar */
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #fff;
-      border-bottom: 1px solid #e5e7eb;
-      padding: 0.75rem 1.25rem;
-    }
+    header { display: flex; justify-content: space-between; align-items: center; background: #fff; border-bottom: 1px solid #e5e7eb; padding: 0.75rem 1.25rem; }
     header h1 { margin: 0; font-size: 1.125rem; font-weight: 600; color: #111827; }
 
-    /* Dark mode helpers */
-    .dark body { background-color: #0f172a; color: #cbd5e1; }
-    .dark .sidebar { background: #0b1220; border-color: #1f2937; }
-    .dark .nav-item:hover { background: rgba(255,255,255,0.03); color: #e6eefb; }
-    .dark .nav-item.active { background: rgba(255,255,255,0.06); color: #60a5fa; }
+    /* overlay (global) */
+    .overlay { display: none; }
+    .overlay.open { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 65; }
 
-    /* Mobile */
-    @media (max-width: 1024px) {
-      .sidebar { transform: translateX(-110%); position: fixed; z-index: 70; }
-      .sidebar.mobile-open { transform: translateX(0); box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
-      .main { margin-left: 0; }
-      .overlay.open { display:block; position:fixed; inset:0; background: rgba(0,0,0,.35); z-index:60; }
-    }
-
-    /* small fixes */
     .no-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
     .no-scrollbar::-webkit-scrollbar-thumb { background: rgba(100,116,139,0.35); border-radius: 8px; }
-
-    /* ensure content containers don't force horizontal scroll */
-    .content-wrap { min-width: 0; }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
 
-  <!-- overlay mobile -->
-  <div id="overlay" class="overlay lg:hidden"></div>
+  <!-- overlay -->
+  <div id="overlay" class="overlay" aria-hidden="true"></div>
 
   <!-- sidebar -->
-  <aside id="sidebar" class="sidebar no-scrollbar">
-
+  <aside id="sidebar" class="sidebar no-scrollbar" aria-hidden="true">
     {% if user.is_authenticated %}
     <div id="sidebarUser" class="sidebar-user">
-      <!-- initials instead of avatar -->
       <div class="user-initial">
-        {% if user.name %}
-          {{ user.name|slice:":1"|upper }}
-        {% else %}
-          U
-        {% endif %}
+        {% if user.name %}{{ user.name|slice:":1"|upper }}{% else %}U{% endif %}
       </div>
       <div class="sidebar-user-info">
         <p class="font-semibold" title="{{ user.name }}">{{ user.name }}</p>
@@ -174,50 +94,49 @@
 
     <div class="px-4 py-4 flex items-center justify-between border-b border-gray-100">
       <div class="flex items-center gap-3">
-        <svg class="w-7 h-7 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path d="M3 7h18M3 12h18M3 17h18" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span class="font-semibold text-gray-800 label">Dev Tasker</span>
+ 
+        <span class="font-semibold text-gray-800">Dev Tasker</span>
       </div>
-
-      <button id="collapseBtn" aria-label="Retract sidebar" class="p-2 rounded-md hover:bg-gray-100">
-        <i data-feather="chevron-left"></i>
-      </button>
     </div>
 
-    <nav class="flex-1 overflow-y-auto px-2 py-4 space-y-1 content-wrap">
+    <nav id="nav" class="flex-1 overflow-y-auto px-2 py-4 space-y-1 content-wrap">
       {% if user.is_authenticated %}
+        <a href="{% url 'task-metrics-dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'task-metrics-dashboard' %}active{% endif %}" title="Dashboard">
+          <span class="nav-icon"><i data-feather="home"></i></span>
+          <span>DEV TASKER</span>
+        </a>
+
         <a href="{% url 'profile' %}" class="nav-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}" title="Perfil">
           <span class="nav-icon"><i data-feather="user"></i></span>
-          <span class="label">Perfil</span>
+          <span>Perfil</span>
         </a>
 
         <a href="{% url 'project-list' %}" class="nav-item {% if request.resolver_match.url_name == 'project-list' %}active{% endif %}" title="Projetos">
           <span class="nav-icon"><i data-feather="folder"></i></span>
-          <span class="label">Projetos</span>
+          <span>Projetos</span>
         </a>
 
         <a href="{% url 'task-list' %}" class="nav-item {% if request.resolver_match.url_name == 'task-list' %}active{% endif %}" title="Tarefas">
           <span class="nav-icon"><i data-feather="check-square"></i></span>
-          <span class="label">Tarefas</span>
+          <span>Tarefas</span>
         </a>
 
         <div class="px-3 pt-2">
-          <div class="text-xs text-gray-400 uppercase tracking-wide label">Ações</div>
+          <div class="text-xs text-gray-400 uppercase tracking-wide">Ações</div>
           <div class="mt-1 space-y-1">
             <a href="{% url 'project-create' %}" class="nav-item" title="Criar projeto">
               <span class="nav-icon"><i data-feather="folder-plus"></i></span>
-              <span class="label">Criar projeto</span>
+              <span>Criar projeto</span>
             </a>
           </div>
         </div>
 
         {% if user.is_superuser %}
         <div class="px-3 pt-3">
-          <div class="text-xs text-gray-400 uppercase tracking-wide label">Admin</div>
+          <div class="text-xs text-gray-400 uppercase tracking-wide">Admin</div>
           <a href="{% url 'user-list' %}" class="nav-item" title="Listar usuários">
             <span class="nav-icon"><i data-feather="users"></i></span>
-            <span class="label">Usuários</span>
+            <span>Usuários</span>
           </a>
         </div>
         {% endif %}
@@ -226,42 +145,38 @@
           {% csrf_token %}
           <button type="submit" class="w-full nav-item text-red-600 hover:bg-red-50" title="Sair">
             <span class="nav-icon"><i data-feather="log-out"></i></span>
-            <span class="label">Sair</span>
+            <span>Sair</span>
           </button>
         </form>
-
       {% else %}
         <a href="{% url 'login' %}" class="nav-item" title="Login">
           <span class="nav-icon"><i data-feather="log-in"></i></span>
-          <span class="label">Login</span>
+          <span>Login</span>
         </a>
         <a href="{% url 'user-create' %}" class="nav-item" title="Registrar">
           <span class="nav-icon"><i data-feather="user-plus"></i></span>
-          <span class="label">Registrar</span>
+          <span>Registrar</span>
         </a>
       {% endif %}
     </nav>
 
     <div class="px-3 py-4 border-t border-gray-100">
-      <div class="text-xs text-gray-400 label">Versão</div>
-      <div class="text-sm text-gray-600 mt-1 label">v1.0</div>
+      <div class="text-xs text-gray-400">Versão</div>
+      <div class="text-sm text-gray-600 mt-1">v1.0</div>
     </div>
-
   </aside>
 
   <!-- conteúdo principal -->
   <div id="main" class="main">
     <header>
       <div class="flex items-center gap-3">
-        <button id="mobileOpen" class="lg:hidden p-2 rounded-md hover:bg-gray-100" aria-label="Abrir menu"><i data-feather="menu"></i></button>
-        <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+        <button id="sidebarToggle" class="p-2 rounded-md hover:bg-gray-100" aria-label="Abrir/Fechar menu">
+          <i data-feather="menu"></i>
+        </button>
+        <h1>{% block page_title %}DEV TASKER{% endblock %}</h1>
       </div>
 
       <div class="flex items-center gap-3">
-        <button id="darkModeToggle" aria-label="Alternar modo escuro" class="p-2 rounded-md bg-gray-100 hover:bg-gray-200">
-          <i data-feather="moon"></i>
-        </button>
-
         {% block header_actions %}
           {% if user.is_authenticated %}
             <a href="{% url 'profile' %}" class="flex items-center gap-2 text-sm text-gray-700 hover:underline">
@@ -283,91 +198,51 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
-      // inicializa icons
       if (typeof feather !== 'undefined') feather.replace();
 
       const sidebar = document.getElementById('sidebar');
-      const main = document.getElementById('main');
-      const collapseBtn = document.getElementById('collapseBtn');
-      const mobileOpen = document.getElementById('mobileOpen');
       const overlay = document.getElementById('overlay');
-      const darkToggle = document.getElementById('darkModeToggle');
+      const sidebarToggle = document.getElementById('sidebarToggle');
 
-      // segurança: verifica elementos
-      function safeQuery(el) { return (el && typeof el !== 'undefined'); }
-
-      // restaura estado do sidebar
-      try {
-        const savedCollapsed = localStorage.getItem('sidebarCollapsed');
-        if (savedCollapsed === 'true') {
-          sidebar.classList.add('collapsed');
-          main.classList.add('shifted');
-          if (collapseBtn && collapseBtn.querySelector('i')) collapseBtn.querySelector('i').dataset.feather = 'chevron-right';
-          if (typeof feather !== 'undefined') feather.replace();
-        }
-      } catch (e) {
-        /* ignore localStorage errors em ambientes restritos */
+      function openOverlaySidebar() {
+        sidebar.classList.add('mobile-open');
+        overlay.classList.add('open');
+        sidebar.setAttribute('aria-hidden', 'false');
+        overlay.setAttribute('aria-hidden', 'false');
+      }
+      function closeOverlaySidebar() {
+        sidebar.classList.remove('mobile-open');
+        overlay.classList.remove('open');
+        sidebar.setAttribute('aria-hidden', 'true');
+        overlay.setAttribute('aria-hidden', 'true');
       }
 
-      // Toggle desktop sidebar
-      if (collapseBtn) {
-        collapseBtn.addEventListener('click', function () {
-          const collapsed = sidebar.classList.toggle('collapsed');
-          main.classList.toggle('shifted');
-          try { localStorage.setItem('sidebarCollapsed', collapsed ? 'true' : 'false'); } catch(e){}
-
-          const icon = collapseBtn.querySelector('i');
-          if (icon) icon.dataset.feather = collapsed ? 'chevron-right' : 'chevron-left';
-          if (typeof feather !== 'undefined') feather.replace();
+      if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', function (ev) {
+          ev.stopPropagation();
+          if (sidebar.classList.contains('mobile-open')) closeOverlaySidebar();
+          else openOverlaySidebar();
         });
       }
 
-      // Mobile open
-      if (mobileOpen) {
-        mobileOpen.addEventListener('click', function () {
-          sidebar.classList.add('mobile-open');
-          overlay.classList.add('open');
-        });
-      }
-
-      // close on overlay
       if (overlay) {
-        overlay.addEventListener('click', function () {
-          sidebar.classList.remove('mobile-open');
-          overlay.classList.remove('open');
+        overlay.addEventListener('click', function (ev) {
+          ev.stopPropagation();
+          closeOverlaySidebar();
         });
       }
 
-      // ESC closes mobile
-      document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') {
-          sidebar.classList.remove('mobile-open');
-          overlay.classList.remove('open');
+      document.addEventListener('click', function (ev) {
+        if (!sidebar.classList.contains('mobile-open')) return;
+        const target = ev.target;
+        if (!sidebar.contains(target) && target !== sidebarToggle && !sidebarToggle.contains(target)) {
+          closeOverlaySidebar();
         }
       });
 
-      // DARK MODE toggle: alterna classe no html e salva preferência
-      (function() {
-        // aplica preferência salva
-        try {
-          if (localStorage.getItem('darkMode') === 'true') document.documentElement.classList.add('dark');
-        } catch(e) {}
-        // atualiza ícone inicial
-        const dmIcon = darkToggle && darkToggle.querySelector('i');
-        if (dmIcon) dmIcon.dataset.feather = document.documentElement.classList.contains('dark') ? 'sun' : 'moon';
-        if (typeof feather !== 'undefined') feather.replace();
-
-        if (darkToggle) {
-          darkToggle.addEventListener('click', function () {
-            const isDark = document.documentElement.classList.toggle('dark');
-            try { localStorage.setItem('darkMode', isDark ? 'true' : 'false'); } catch(e){}
-            const icon = darkToggle.querySelector('i');
-            if (icon) icon.dataset.feather = isDark ? 'sun' : 'moon';
-            if (typeof feather !== 'undefined') feather.replace();
-          });
-        }
-      })();
-
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeOverlaySidebar();
+      });
     });
   </script>
 </body>
