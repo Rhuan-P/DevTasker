@@ -1,51 +1,57 @@
 {% extends "base.html" %}
 {% block title %}Tarefas{% endblock %}
 
-{% block content %}
-<div class="container mx-auto p-8 bg-white rounded-xl shadow-lg mt-8 font-poppins max-w-3xl">
+{% block page_title %}Minhas Tarefas{% endblock %}
 
-  <div class="mb-6">
-    <h1 class="text-3xl font-bold">Minhas Tarefas</h1>
-    <p class="text-gray-600 text-sm">Olá, {{ user.name }}!</p>
-      
-      <p class="text-gray-600 text-sm">Aqui estão suas tarefas:</p>
+{% block content %}
+<div class="max-w-5xl mx-auto p-6 space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-2xl font-semibold">Minhas Tarefas</h2>
+      <p class="text-sm text-gray-500">Olá, {{ user.name }} — aqui estão as tarefas que você participa.</p>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <a href="{% url 'task-metrics' %}" class="btn bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded">API de Métricas (JSON)</a>
+      <a href="{% url 'task-list-api' %}" class="btn bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded">API de Tasks (JSON)</a>
+      <a href="{% url 'task-metrics-dashboard' %}" class="btn bg-indigo-100 hover:bg-indigo-200 px-4 py-2 rounded text-indigo-800">Dashboard</a>
+      <!-- (task-metrics-dashboard será criado como TemplateView caso prefira render server-side) -->
+    </div>
   </div>
 
-  <ul class="space-y-6">
+  <ul class="space-y-4">
     {% for task in tasks %}
-      <li class="border border-gray-200 rounded-md p-4 hover:bg-gray-100 transition">
-        
-        <h1>
-          <a href="{%url 'project-detail' task.project.pk%}" class="text-indigo-600 hover:underline">{{ task.project.name }}</a>
-        </h1>
+      <li class="bg-white border rounded-md p-4 flex flex-col md:flex-row md:justify-between gap-4">
+        <div>
+          <a href="{% url 'task-detail' task.pk %}" class="text-lg font-semibold text-indigo-600 hover:underline">{{ task.name }}</a>
+          <p class="text-sm text-gray-600 mt-1">Projeto: <a href="{% url 'project-detail' task.project.pk %}" class="text-indigo-600 hover:underline">{{ task.project.name }}</a></p>
+          <p class="text-sm text-gray-500 mt-1">Responsável: {{ task.assigned_to.name|default:"—" }}</p>
+        </div>
 
-        <h2 class="text-xl font-semibold">
-          <a href="{% url 'task-detail' task.pk %}" class="text-indigo-600 hover:underline">{{ task.name }}</a>
-        </h2>
-        <p class="text-gray-600 mt-1">Criada por: {{task.owner}}</p>
-        <p class="text-gray-600 mt-1">Status: {{ task.get_status_display }}</p>
-        <div class="mt-3 flex flex-wrap gap-4">
-          {% if task.status != 'completed' and                                                                                    task.status != 'canceled'  %}
-            <a href="{% url 'task-complete' task.pk %}" class="bg-green-600 hover:bg-green-700 text-white rounded px-4 py-2 transition">Concluir</a>
-          {% endif %}
+        <div class="flex items-center gap-3">
+          <span class="px-3 py-1 rounded-full text-sm font-medium
+            {% if task.status == 'completed' %}bg-green-100 text-green-800
+            {% elif task.status == 'in_progress' %}bg-yellow-100 text-yellow-800
+            {% elif task.status == 'canceled' %}bg-red-100 text-red-800
+            {% else %}bg-gray-100 text-gray-800{% endif %}">
+            {{ task.get_status_display }}
+          </span>
 
-          {% if task.status != 'canceled' %}
-            <a href="{% url 'task-cancel' task.pk %}" class="bg-red-600 hover:bg-red-700 text-white rounded px-4 py-2 transition">Cancelar</a>
-          {% endif %}
+          <span class="px-3 py-1 rounded-full text-sm font-medium
+            {% if task.priority == 'HIGH' %}bg-red-100 text-red-800
+            {% elif task.priority == 'MEDIUM' %}bg-amber-100 text-amber-800
+            {% else %}bg-green-100 text-green-800{% endif %}">
+            {{ task.get_priority_display }}
+          </span>
 
-          {% if task.status != 'in_progress' %}
-            <a href="{% url 'task-reopen' task.pk %}" class="bg-yellow-500 hover:bg-yellow-600 text-white rounded px-4 py-2 transition">Reabrir</a>
-          {% endif %} 
-          
-          {% if task.owner == request.user %}
-            <a href="{% url 'task-update' task.pk %}" class="bg-gray-600 hover:bg-gray-700 text-white rounded px-4 py-2 transition">
-              Editar
-            </a>
-          {% endif %}
+          <div class="text-sm text-gray-500">
+            <div>Início: {{ task.start_date|date:"d/m/Y" }}</div>
+            <div>Fim: {{ task.end_date|date:"d/m/Y" }}</div>
+          </div>
         </div>
       </li>
     {% empty %}
-      <li class="text-gray-600">Nenhuma tarefa cadastrada.</li>
+      <li class="text-gray-600">Nenhuma tarefa encontrada.</li>
     {% endfor %}
   </ul>
 </div>

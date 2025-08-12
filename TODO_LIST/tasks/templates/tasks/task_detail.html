@@ -1,70 +1,58 @@
 {% extends "base.html" %}
-{% block title %}Detalhes da Tarefa{% endblock %}
+{% block title %}Detalhes - {{ task.name }}{% endblock %}
+{% block page_title %}Detalhes da Tarefa{% endblock %}
 
 {% block content %}
-<section class="min-h-[60vh] flex items-start justify-center px-4 py-10">
-  <div class="w-full max-w-3xl bg-white rounded-xl shadow-lg p-8 space-y-6 font-poppins">
+<div class="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow space-y-4">
+  <h2 class="text-2xl font-semibold">{{ task.name }}</h2>
 
-   
-      <h1 class="text-3xl font-bold mb-4">Detalhes da Tarefa</h1>
-    
+  <dl class="grid grid-cols-1 gap-2">
+    <div>
+      <dt class="font-medium text-sm">Projeto</dt>
+      <dd class="text-sm">{{ task.project.name }}</dd>
+    </div>
+    <div>
+      <dt class="font-medium text-sm">Descrição</dt>
+      <dd class="text-sm">{{ task.description|linebreaksbr|default:"—" }}</dd>
+    </div>
+    <div>
+      <dt class="font-medium text-sm">Status</dt>
+      <dd class="text-sm">{{ task.get_status_display }}</dd>
+    </div>
+    <div>
+      <dt class="font-medium text-sm">Prioridade</dt>
+      <dd class="text-sm">{{ task.get_priority_display }}</dd>
+    </div>
+    <div>
+      <dt class="font-medium text-sm">Responsável</dt>
+      <dd class="text-sm">{{ task.assigned_to.name|default:"—" }}</dd>
+    </div>
+    <div>
+      <dt class="font-medium text-sm">Proprietário</dt>
+      <dd class="text-sm">{{ task.owner.name|default:"—" }}</dd>
+    </div>
+    <div>
+      <dt class="font-medium text-sm">Início / Fim</dt>
+      <dd class="text-sm">{{ task.start_date|date:"d/m/Y" }} — {{ task.end_date|date:"d/m/Y" }}</dd>
+    </div>
+    <div>
+      <dt class="font-medium text-sm">Completada em</dt>
+      <dd class="text-sm">{{ task.completed_at|date:"d/m/Y H:i" }}</dd>
+    </div>
+  </dl>
 
-    <div class="info-item">
-      <strong class="inline-block w-36">Nome:</strong> {{ task.name }}
-    </div>
-    <div class="info-item">
-      <strong class="inline-block w-36">Projeto:</strong> {{ task.project.name }}
-    </div>
-    <div class="info-item">
-      <strong class="inline-block w-36">Descrição:</strong> {{ task.description }}
-    </div>
-    <div class="info-item">
-      <strong class="inline-block w-36">Data de início:</strong> {{ task.start_date }}
-    </div>
-    <div class="info-item">
-      <strong class="inline-block w-36">Data de fim:</strong> {{ task.end_date }}
-    </div>
-    <div class="info-item">
-      <strong class="inline-block w-36">Status:</strong> {{ task.get_status_display }}
-    </div>
-    <div class="info-item">
-      <strong class="inline-block w-36">Responsável:</strong> {{ task.assigned_to }}
-    </div>
-    <div class="info-item">
-      <strong class="inline-block w-36">Prioridade:</strong> {{ task.get_priority_display }}
-    </div>
-    <div class="info-item">
-      <strong class="inline-block w-36">Proprietário:</strong> {{ task.owner }}
-    </div>
-        <div class="flex gap-3 mt-4">
-      {% if task.status != 'completed' %}
-        <a href="{% url 'task-complete' task.pk %}" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded">Concluir</a>
-      {% endif %}
-
-      {% if task.status != 'canceled' %}
-        <a href="{% url 'task-cancel' task.pk %}" class="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded">Cancelar</a>
-      {% endif %}
-
-      {% if task.status != 'in_progress' %}
-        <a href="{% url 'task-reopen' task.pk %}" class="bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded">Reabrir</a>
-      {% endif %}
-    </div>
-      
-    <div class="flex gap-4 mt-6">
-      {% if task.owner == request.user %}
-      <a href="{% url 'task-update' task.pk %}" class="btn bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded">
-        Editar
-      </a>
-      <a href="{% url 'task-delete' task.pk %}" class="btn bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded">
-        Deletar
-      </a>  
-      {% endif %}
-      <a href="javascript:history.back()" 
-         class="btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded">
-        Voltar
-      </a>
-    </div>
-
+  <div class="flex gap-3 mt-4">
+    {% if task.status != 'completed' %}
+      <a href="{% url 'task-complete' task.pk %}" class="bg-green-600 text-white px-4 py-2 rounded">Concluir</a>
+    {% endif %}
+    {% if task.status != 'canceled' %}
+      <a href="{% url 'task-cancel' task.pk %}" class="bg-red-600 text-white px-4 py-2 rounded">Cancelar</a>
+    {% endif %}
+    {% if task.owner == request.user %}
+      <a href="{% url 'task-update' task.pk %}" class="bg-indigo-600 text-white px-4 py-2 rounded">Editar</a>
+      <a href="{% url 'task-delete' task.pk %}" class="bg-gray-200 px-4 py-2 rounded">Deletar</a>
+    {% endif %}
+    <a href="javascript:history.back()" class="bg-gray-100 px-4 py-2 rounded">Voltar</a>
   </div>
-</section>
+</div>
 {% endblock %}
