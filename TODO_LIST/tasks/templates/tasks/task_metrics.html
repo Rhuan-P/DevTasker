@@ -39,7 +39,7 @@
       <div id="card-risk" class="text-2xl font-bold text-amber-600">—</div>
     </div>
     <div class="p-4 bg-white rounded shadow text-center">
-      <div class="text-sm text-gray-500">Tempo médio (dias)</div>
+      <div class="text-sm text-gray-500">Tempo médio</div>
       <div id="card-avg-time" class="text-2xl font-bold text-gray-800">—</div>
     </div>
   </div>
@@ -67,7 +67,7 @@
 
   <!-- Opcional: lista curta de tarefas em risco -->
   <div id="risk-list-container" class="p-4 bg-white rounded shadow hidden">
-    <h4 class="font-semibold mb-2">Tarefas em risco (amostra)</h4>
+    <h4 class="font-semibold mb-2">Tarefas em risco</h4>
     <ul id="risk-list" class="space-y-2 text-sm"></ul>
   </div>
 
@@ -77,6 +77,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css" />
 <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.4/dist/ag-grid-community.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 
 <script>
   const metricsUrl = "{% url 'task-metrics' %}";
@@ -140,44 +141,36 @@
   // GRID: definimos regras de classe para destacar linhas
   const RISK_DAYS = 3; // fallback; será sobrescrito se a API voltar risk_days
   const columnDefs = [
-    { field: 'id', width: 80 },
-    { field: 'name', flex: 1 },
-    { headerName: 'Projeto', valueGetter: p => p.data.project ? (p.data.project.name || `#${p.data.project.id}`) : '—', flex: 1 },
-    { headerName: 'Owner', valueGetter: p => extractName(p.data.owner), width: 160 },
-    { headerName: 'Assigned', valueGetter: p => extractName(p.data.assigned_to), width: 160 },
+  
+    { field: 'name', flex: 1 , width: 100 },
+    { headerName: 'Projeto', valueGetter: p => p.data.project ? (p.data.project.name || `#${p.data.project.id}`) : '—', flex: 1, width: 100 },
+    { headerName: 'Owner', valueGetter: p => extractName(p.data.owner), width: 100 },
+    { headerName: 'Assigned', valueGetter: p => extractName(p.data.assigned_to), width: 100 },
     { field: 'status', width: 140, valueFormatter: p => p.data?.status_display || STATUS_LABELS[(p.value||'').toUpperCase()] || p.value || '—' },
-    { field: 'priority', width: 120, valueFormatter: p => p.data?.priority_display || PRIORITY_LABELS[(p.value||'').toUpperCase()] || p.value || '—' },
-    { field: 'start_date', width: 120, valueGetter: p => p.data.start_date ? new Date(p.data.start_date).toLocaleDateString() : '—' },
-    { field: 'end_date', width: 120, valueGetter: p => p.data.end_date ? new Date(p.data.end_date).toLocaleDateString() : '—' },
-    { field: 'completed_at', width: 160, valueGetter: p => p.data.completed_at ? new Date(p.data.completed_at).toLocaleString() : '—' },
+    { field: 'priority', width: 90, valueFormatter: p => p.data?.priority_display || PRIORITY_LABELS[(p.value||'').toUpperCase()] || p.value || '—' },
+    { field: 'start_date', width: 80, valueGetter: p => p.data.start_date ? new Date(p.data.start_date).toLocaleDateString() : '—' },
+    { field: 'end_date', width: 80, valueGetter: p => p.data.end_date ? new Date(p.data.end_date).toLocaleDateString() : '—' },
+    { field: 'completed_at', width: 100, valueGetter: p => p.data.completed_at ? new Date(p.data.completed_at).toLocaleString() : '—' },
   ];
 
   const gridOptions = {
-    columnDefs,
-    rowData: [],
-    rowClassRules: {
-      // usado pelo ag-grid; aqui usamos funções que acessam row data
-      'task-overdue': params => {
-        if (!params.data || !params.data.end_date) return false;
-        try {
-          const end = new Date(params.data.end_date);
-          const now = new Date();
-          return end < now && (params.data.status || '').toLowerCase() !== 'completed';
-        } catch (e) { return false; }
-      },
-      'task-risk': params => {
-        if (!params.data || !params.data.end_date) return false;
-        try {
-          const end = new Date(params.data.end_date);
-          const now = new Date();
-          const diffDays = (end - now) / (1000*60*60*24);
-          return diffDays >= 0 && diffDays <= (window.RISK_DAYS ?? RISK_DAYS) && (params.data.status || '').toLowerCase() !== 'completed';
-        } catch (e) { return false; }
-      },
-      'task-completed': params => (params.data && (params.data.status || '').toLowerCase() === 'completed')
-    }
-  };
-
+  columnDefs,
+  rowData: [],
+  rowClassRules: {
+    'task-overdue': params => {
+      const isOverdue = params.data.end_date && new Date(params.data.end_date) < new Date();
+      const isNotCompleted = params.data.status !== 'completed';
+      return isOverdue && isNotCompleted;
+    },
+    'task-risk': params => {
+      const isWithinRiskDays = params.data.end_date && (new Date(params.data.end_date) - new Date()) / (1000 * 60 * 60 * 24) <= (window.RISK_DAYS ?? RISK_DAYS);
+      const isNotCompleted = params.data.status !== 'completed';
+      return isWithinRiskDays && isNotCompleted;
+    },
+    'task-completed': params => params.data.status === 'completed',
+    'task-canceled': params => params.data.status === 'canceled'
+  }
+};
   function safeSetRowData(gridResult, gridOptions, rows) {
     const api = (gridResult && gridResult.api) ? gridResult.api : (gridOptions && gridOptions.api ? gridOptions.api : null);
     if (api && typeof api.setRowData === 'function') {
@@ -217,17 +210,17 @@
       const avg = metrics?.avg_completion_time_days;
       document.getElementById('card-avg-time').textContent = (avg != null) ? `${Number(avg).toFixed(1)} dias` : '—';
 
-      // SHOW risk sample list (opcional)
-      if (metrics?.tasks_in_risk && metrics.tasks_in_risk.length) {
-        const list = document.getElementById('risk-list');
-        list.innerHTML = '';
-        metrics.tasks_in_risk.forEach(t => {
-          const el = document.createElement('li');
-          el.innerHTML = `<strong class="text-sm">${t.name}</strong> — ${t.project?.name ?? '—'} — até ${t.end_date ? new Date(t.end_date).toLocaleDateString() : '—'} <span class="badge badge-risk">Risco</span>`;
-          list.appendChild(el);
-        });
-        document.getElementById('risk-list-container').classList.remove('hidden');
-      }
+// SHOW risk sample list (opcional)
+if (metrics?.tasks_in_risk && metrics.tasks_in_risk.length) {
+  const list = document.getElementById('risk-list');
+  list.innerHTML = '';
+  metrics.tasks_in_risk.forEach(t => {
+    const el = document.createElement('li');
+    el.innerHTML = `<strong class="text-sm">${t.name}</strong> — ${t.project?.name ?? '—'} — até ${t.end_date ? new Date(t.end_date).toLocaleDateString() : '—'} <span class="badge badge-risk">Risco</span>`;
+    list.appendChild(el);
+  });
+  document.getElementById('risk-list-container').classList.remove('hidden');
+}
 
       // Charts: status
       const normalizedStatus = normalizeCounts(metrics?.status_counts ?? [], 'status', STATUS_LABELS);
@@ -313,5 +306,12 @@
       }
     }
   });
+
+
+  
 </script>
+
+
+
+
 {% endblock %}

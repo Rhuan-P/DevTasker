@@ -23,3 +23,13 @@ class User(AbstractUser):
     def __str__(self):
         return self.email
     
+
+class Adress(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='addresses')
+    street = models.CharField(max_length=255)
+    number = models.CharField(max_length=255)
+    neighborhood = models.CharField(max_length=255)
+    city = models.CharField(max_length=255)
+    state = models.CharField(max_length=255)
+    zip_code = models.CharField(max_length=255)
+    default = models.BooleanField(default=False)

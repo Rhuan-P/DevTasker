@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}{% if object %}Editar Endereço{% else %}Novo Endereço{% endif %}{% endblock %}
+
+{% block content %}
+<section class="min-h-[60vh] flex items-center justify-center">
+    <div class="w-full max-w-md bg-white rounded-xl shadow-lg p-8 space-y-6">
+
+        <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 text-center">
+            {% if object %}Editar Endereço{% else %}Novo Endereço{% endif %}
+        </h2>
+
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            
+            <div class="flex flex-col">
+                <label for="zip_code" class="font-medium text-gray-700 mb-1">CEP:</label>
+                <input type="text" id="zip_code" name="zip_code" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" placeholder="Digite o CEP" value="{{ object.zip_code|default:'' }}">
+            </div>
+            
+            <p id="error-message" class="text-sm text-red-600"></p>
+
+            <div class="flex flex-col">
+                <label for="logradouro" class="font-medium text-gray-700 mb-1">Logradouro:</label>
+                <input type="text" id="logradouro" name="street" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" placeholder="Rua, avenida, etc." value="{{ object.street|default:'' }}">
+            </div>
+
+            <div class="flex flex-col">
+                <label for="numero" class="font-medium text-gray-700 mb-1">Número:</label>
+                <input type="text" id="numero" name="number" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" placeholder="Número" value="{{ object.number|default:'' }}">
+            </div>
+            
+            <div class="flex flex-col">
+                <label for="bairro" class="font-medium text-gray-700 mb-1">Bairro:</label>
+                <input type="text" id="bairro" name="neighborhood" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" placeholder="Bairro" value="{{ object.neighborhood|default:'' }}">
+            </div>
+            
+            <div class="flex flex-col">
+                <label for="localidade" class="font-medium text-gray-700 mb-1">Cidade:</label>
+                <input type="text" id="localidade" name="city" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" placeholder="Cidade" value="{{ object.city|default:'' }}">
+            </div>
+            
+            <div class="flex flex-col">
+                <label for="uf" class="font-medium text-gray-700 mb-1">Estado:</label>
+                <input type="text" id="uf" name="state" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" placeholder="Estado" value="{{ object.state|default:'' }}">
+            </div>
+
+            <div class="flex items-center">
+                <input type="checkbox" id="default" name="default" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" {% if object and object.default %}checked{% elif not object %}checked{% endif %}>
+                <label for="default" class="ml-2 block text-sm text-gray-900">Endereço padrão</label>
+            </div>
+
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg shadow transition">
+                {% if object %}Salvar{% else %}Criar{% endif %}
+            </button>
+        </form>
+    </div>
+</section>
+
+
+{% block extra_js %}
+<script>
+    console.log('Adress form');
+    
+    const buscarEndereco = async (cep) => {
+        const url = `https://viacep.com.br/ws/${cep}/json/`;
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+
+            // Verifica se o CEP é válido e não contém erro
+            if (data && !data.erro) {
+                document.getElementById('logradouro').value = data.logradouro;
+                document.getElementById('bairro').value = data.bairro;
+                document.getElementById('localidade').value = data.localidade;
+                document.getElementById('uf').value = data.uf;
+                document.getElementById('numero').value = '';
+                document.getElementById('error-message').textContent = '';
+            } else {
+                console.error('CEP não encontrado ou inválido.');
+                document.getElementById('error-message').textContent = 'CEP não encontrado.';
+                limparCampos();
+            }
+        } catch (error) {
+            console.error('Erro ao buscar endereço:', error);
+            document.getElementById('error-message').textContent = 'Erro ao buscar o endereço. Tente novamente.';
+            limparCampos();
+        }
+    };
+
+    const limparCampos = () => {
+        document.getElementById('logradouro').value = '';
+        document.getElementById('bairro').value = '';
+        document.getElementById('localidade').value = '';
+        document.getElementById('uf').value = '';
+        document.getElementById('numero').value = '';
+    };
+
+    // Usamos um `debounce` para evitar múltiplas requisições enquanto o usuário digita.
+    const debounce = (func, wait) => {
+        let timeout;
+        return function(...args) {
+            const context = this;
+            const later = () => {
+                timeout = null;
+                func.apply(context, args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const zipCodeInput = document.getElementById('zip_code');
+        const debouncedBuscarEndereco = debounce((event) => {
+            const cep = event.target.value.replace(/\D/g, ''); // Remove caracteres não numéricos
+            if (cep.length === 8) {
+                buscarEndereco(cep);
+            }
+        }, 800); // 800ms de espera
+
+        zipCodeInput.addEventListener('input', debouncedBuscarEndereco);
+    });
+</script>
+{% endblock %}
+{% endblock %}

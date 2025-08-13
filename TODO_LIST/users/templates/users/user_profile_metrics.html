@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard de Atividade{% endblock %}
+
+{% block content %}
+<section class="min-h-[60vh] flex flex-col items-center justify-center p-6">
+  <div class="w-full max-w-4xl bg-white rounded-xl shadow-lg p-8 space-y-8">
+
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-800 text-center">
+      Dashboard de Atividade
+    </h1>
+
+    <div class="border-b pb-6 border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-700 mb-4">Seus Dados Pessoais</h2>
+      <ul class="space-y-2 text-gray-700 text-base md:text-lg">
+        <li><strong>Email:</strong> {{ user.email|default:"Não informado" }}</li>
+        <li><strong>País:</strong> {{ user.country.name|default:"Não informado" }}</li>
+        <li><strong>Gênero:</strong> {{ user.get_gender_display|default:"Não informado" }}</li>
+        <li><strong>Data de nascimento:</strong> {{ user.date_of_birth|date:"d/m/Y"|default:"Não informado" }}</li>
+      </ul>
+    </div>
+
+    <h3 class="text-xl font-semibold text-gray-700 mb-4 border-b border-gray-200 pb-2 "> Metricas Pessoais </h3>
+
+    <section class="relative pointer-events-none ">
+  <div class="blur-sm select-none">
+       <h2 class="text-xl font-semibold text-gray-700 text-center">Sua Atividade Recente</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="bg-gray-50 border rounded-lg p-4 flex flex-col items-center justify-center text-center">
+        <span class="text-4xl font-bold text-indigo-600">
+          <span id="total_orders_value">0</span>
+        </span>
+        <p class="text-sm font-medium text-gray-500 mt-2">Total de Pedidos</p>
+      </div>
+      <div class="bg-gray-50 border rounded-lg p-4 flex flex-col items-center justify-center text-center">
+        <span class="text-4xl font-bold text-teal-600">
+          <span id="pending_orders_value">0</span>
+        </span>
+        <p class="text-sm font-medium text-gray-500 mt-2">Pedidos Pendentes</p>
+      </div>
+      <div class="bg-gray-50 border rounded-lg p-4 flex flex-col items-center justify-center text-center">
+        <span class="text-4xl font-bold text-rose-600">
+          <span id="last_login_value">--</span>
+        </span>
+        <p class="text-sm font-medium text-gray-500 mt-2">Último Acesso</p>
+      </div>
+    </div>
+
+    <div class="mt-8">
+      <h3 class="text-lg font-semibold text-gray-700 mb-4">Métricas do Usuário</h3>
+      <div id="profileCharts" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <canvas id="ageChart" class="w-full h-48"></canvas>
+        <canvas id="statusChart" class="w-full h-48"></canvas>
+      </div>
+    </div>
+
+    <div class="mt-8">
+      <h3 class="text-lg font-semibold text-gray-700 mb-4">Resumo das Métricas Pessoais</h3>
+      <div id="metricsGrid" class="ag-theme-alpine" style="height: 250px; width: 100%;"></div>
+    </div>
+
+  </div>
+  <div class="absolute inset-0 flex items-center justify-center">
+    <span class="bg-white/70 text-black font-bold text-2xl px-4 py-2 rounded-lg">
+      Em breve
+    </span>
+  </div>
+</section>
+   
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // A API que será consumida é a 'user-personal-metrics-api'
+    fetch("{% url 'user-personal-metrics-api' %}")
+      .then(res => {
+        if (!res.ok) throw new Error('Erro ao carregar métricas pessoais');
+        return res.json();
+      })
+      .then(data => {
+        // 1. Preencher os cards com dados (novas métricas)
+        // Esses campos não existem na sua view, então a API precisa ser atualizada para fornecê-los.
+        // Por enquanto, vamos preencher com os dados que a API já retorna.
+        document.getElementById('total_orders_value').textContent = data.total_orders || 0;
+        document.getElementById('pending_orders_value').textContent = data.pending_orders || 0;
+        document.getElementById('last_login_value').textContent = data.last_login ? new Date(data.last_login).toLocaleDateString() : '--';
+
+        // 2. Gráfico de idade (doughnut) - O que já existia na sua view
+        const idade = data.age !== null ? data.age : 0;
+        const ctxAge = document.getElementById('ageChart').getContext('2d');
+        new Chart(ctxAge, {
+          type: 'doughnut',
+          data: {
+            labels: ['Idade', 'Até 100 anos'],
+            datasets: [{
+              data: [idade, 100 - idade],
+              backgroundColor: ['#4f46e5', '#d1d5db'],
+              hoverOffset: 4
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: 'bottom' },
+              title: {
+                display: true,
+                text: idade > 0 ? `Idade: ${idade} anos` : 'Idade não informada'
+              }
+            }
+          }
+        });
+
+        // 3. Gráfico de status ativo/inativo (doughnut) - O que já existia na sua view
+        const ctxStatus = document.getElementById('statusChart').getContext('2d');
+        new Chart(ctxStatus, {
+          type: 'doughnut',
+          data: {
+            labels: ['Ativo', 'Inativo'],
+            datasets: [{
+              data: [data.is_active ? 1 : 0, data.is_active ? 0 : 1],
+              backgroundColor: ['#10b981', '#ef4444'],
+              hoverOffset: 4
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: 'bottom' },
+              title: { display: true, text: 'Status do Usuário' }
+            }
+          }
+        });
+
+        // 4. AG Grid tabela resumo
+        const columnDefs = [
+          { field: 'metric', headerName: 'Métrica', flex: 1 },
+          { field: 'value', headerName: 'Valor', width: 200 }
+        ];
+
+        const rowData = [
+          { metric: 'Nome', value: data.name || 'Não informado' },
+          { metric: 'Email', value: data.email || 'Não informado' },
+          { metric: 'País', value: data.country || 'Não informado' },
+          { metric: 'Gênero', value: data.gender || 'Não informado' },
+          { metric: 'Idade', value: data.age !== null ? data.age : 'Não informado' },
+          { metric: 'Status Ativo', value: data.is_active ? 'Sim' : 'Não' },
+          { metric: 'Data de Cadastro', value: data.date_joined || 'Não informado' },
+          // Adicionando as novas métricas na tabela, se a API for atualizada
+          { metric: 'Total de Pedidos', value: data.total_orders !== undefined ? data.total_orders : 'Não disponível' },
+          { metric: 'Pedidos Pendentes', value: data.pending_orders !== undefined ? data.pending_orders : 'Não disponível' },
+          { metric: 'Último Login', value: data.last_login ? new Date(data.last_login).toLocaleDateString() : 'Não disponível' },
+        ];
+
+        const gridOptions = {
+          columnDefs,
+          rowData,
+          defaultColDef: { resizable: true, sortable: true, filter: true },
+          pagination: false,
+          suppressMovableColumns: true,
+        };
+
+        const gridDiv = document.getElementById('metricsGrid');
+        if (window.metricsGridInstance) {
+          window.metricsGridInstance.destroy();
+        }
+        window.metricsGridInstance = agGrid.createGrid(gridDiv, gridOptions);
+      })
+      .catch(err => {
+        console.error("Erro ao carregar métricas pessoais:", err);
+        // Mensagem de erro para o usuário
+        document.getElementById('metricsGrid').innerHTML = '<p class="text-red-500 text-center">Não foi possível carregar as métricas. Tente novamente mais tarde.</p>';
+      });
+  });
+</script>
+{% endblock %}
