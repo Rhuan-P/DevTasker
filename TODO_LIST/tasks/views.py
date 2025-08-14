@@ -41,6 +41,13 @@ class TaskStatusUpdateView(TaskAccessMixin, SingleObjectMixin, View):
     target_status = None          # Deve ser definido nas subclasses
     skip_if_status_is = None      # Deve ser definido nas subclasses
 
+    
+    def dispatch(self, request, *args, **kwargs):
+        task = self.get_object()
+        if task.owner != request.user:
+            raise PermissionDenied("You do not have permission to update this task.")
+        return super().dispatch(request, *args, **kwargs)
+
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         if self.skip_if_status_is and self.object.status == self.skip_if_status_is:
@@ -70,6 +77,7 @@ class TaskReopenView(TaskStatusUpdateView):
     template_name = 'tasks/task_confirm_reopen.html'
     target_status = TaskStatus.IN_PROGRESS
     skip_if_status_is = TaskStatus.IN_PROGRESS
+
 
 
 class TaskCancelView(TaskStatusUpdateView):
@@ -148,14 +156,7 @@ class TaskDeleteView(TaskAccessMixin, DeleteView):
 
 
 # =============== MÉTRICAS =================
-from django.views.generic import TemplateView
-from django.utils import timezone
-from django.views import View
-from django.http import JsonResponse
-from django.db.models import Count, Q, F
 
-from .models import Task
-from core.choices import TaskStatus, TaskPriority
 
 class TaskMetricsView(LoginRequiredMixin, View):
     """

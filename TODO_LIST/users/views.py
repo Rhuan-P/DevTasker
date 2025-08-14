@@ -21,16 +21,15 @@ class AdressCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.user = self.request.user
         return super().form_valid(form)
+
+# Only Superuser can list users
 class UserListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     model = User
     template_name = 'users/user_list.html'
     context_object_name = 'users'
 
-
-    
-
     def test_func(self):
-        return self.request.user.is_staff
+        return self.request.user.is_superuser
 
     def render_to_response(self, context, **response_kwargs):
         if self.request.GET.get('format') == 'json':
@@ -66,7 +65,7 @@ class UserUpdateView(LoginRequiredMixin, UpdateView):
     model = User
     form_class = CustomUserChangeForm
     template_name = 'users/user_form.html'
-    success_url = reverse_lazy('user-list')
+    success_url = reverse_lazy('profile')
 
 class UserDeleteView(DeleteView):
     model = User

@@ -13,7 +13,10 @@ class CustomUserCreationForm(UserCreationForm):
 class CustomUserChangeForm(UserChangeForm):
     class Meta:
         model = User
-        fields = ('name', 'email')
+        fields = ('name', 'email', 'date_of_birth', 'country', 'gender')
+        widgets = {
+            'date_of_birth': forms.DateInput(attrs={'type': 'date'})
+        }
 
 
 class AdressForm(forms.ModelForm):

@@ -8,8 +8,8 @@
   .chart-container canvas { max-width: 100% !important; max-height: 100%  !important; display: block; }
 
   /* destaque visual para linhas da grid */
-  .task-risk { background-color: #fff7ed !important; }      /* amarelo claro */
-  .task-overdue { background-color: #ffefef !important; }    /* vermelho claro */
+  .task-risk { background-color: #eeb222af !important; }      /* amarelo claro */
+  .task-overdue { background-color: #e66666af !important; }    /* vermelho claro */
   .task-completed { opacity: 0.95; }
 
   /* badge simples dentro cells */
@@ -140,38 +140,124 @@
 
   // GRID: definimos regras de classe para destacar linhas
   const RISK_DAYS = 3; // fallback; será sobrescrito se a API voltar risk_days
-  const columnDefs = [
-  
-    { field: 'name', flex: 1 , width: 100 },
-    { headerName: 'Projeto', valueGetter: p => p.data.project ? (p.data.project.name || `#${p.data.project.id}`) : '—', flex: 1, width: 100 },
-    { headerName: 'Owner', valueGetter: p => extractName(p.data.owner), width: 100 },
-    { headerName: 'Assigned', valueGetter: p => extractName(p.data.assigned_to), width: 100 },
-    { field: 'status', width: 140, valueFormatter: p => p.data?.status_display || STATUS_LABELS[(p.value||'').toUpperCase()] || p.value || '—' },
-    { field: 'priority', width: 90, valueFormatter: p => p.data?.priority_display || PRIORITY_LABELS[(p.value||'').toUpperCase()] || p.value || '—' },
-    { field: 'start_date', width: 80, valueGetter: p => p.data.start_date ? new Date(p.data.start_date).toLocaleDateString() : '—' },
-    { field: 'end_date', width: 80, valueGetter: p => p.data.end_date ? new Date(p.data.end_date).toLocaleDateString() : '—' },
-    { field: 'completed_at', width: 100, valueGetter: p => p.data.completed_at ? new Date(p.data.completed_at).toLocaleString() : '—' },
-  ];
+const columnDefs = [
+  { 
+    field: 'name', 
+    headerName: 'Tarefa', 
+    flex: 1.2, 
+    width: 200, 
+    sortable: true, 
+    filter: true, 
+    tooltipField: 'name' 
+  },
+  { 
+    headerName: 'Projeto', 
+    field: 'project',
+    valueGetter: p => p.data.project?.name || '—', 
+    flex: 1.2,
+    sortable: true, 
+    filter: true 
+  },
+  { 
+    headerName: 'Criador', 
+    field: 'owner',
+    valueGetter: p => extractName(p.data.owner), 
+    flex: 1.2,
+    sortable: true, 
+    filter: true 
+  },
+  { 
+    headerName: 'Atribuído', 
+    field: 'assigned_to',
+    valueGetter: p => extractName(p.data.assigned_to), 
+    flex: 1.2,
+    sortable: true, 
+    filter: true 
+  },
+  { 
+  headerName: 'Status',
+    field: 'status', 
+    flex: 1.2,
+    sortable: true, 
+    filter: true, 
+    valueFormatter: p => p.data?.status_display || STATUS_LABELS[(p.value || '').toUpperCase()] || p.value || '—' 
+  },
+  { 
+  headerName: 'Prioridade',
+    field: 'priority', 
+    flex: 1,
+    sortable: true, 
+    filter: true, 
+    valueFormatter: p => p.data?.priority_display || PRIORITY_LABELS[(p.value || '').toUpperCase()] || p.value || '—' 
+  },
+  { 
+    headerName: 'Início', 
+    field: 'start_date', 
+   flex: 1,
+    sortable: true, 
+    filter: 'agDateColumnFilter',
+    valueFormatter: p => p.data.start_date ? new Date(p.data.start_date).toLocaleDateString('pt-BR') : '—'
+  },
+  { 
+    headerName: 'Fim', 
+    field: 'end_date', 
+    flex: 1, 
+    sortable: true, 
+    filter: 'agDateColumnFilter',
+    valueFormatter: p => p.data.end_date ? new Date(p.data.end_date).toLocaleDateString('pt-BR') : '—'
+  },
+  { 
+    headerName: 'Concluida', 
+    field: 'completed_at', 
+    flex: 1,
+    sortable: true, 
+    filter: 'agDateColumnFilter',
+    valueFormatter: p => p.data.completed_at ? new Date(p.data.completed_at).toLocaleString('pt-BR') : '—'
+  },
+];
 
-  const gridOptions = {
-  columnDefs,
-  rowData: [],
-  rowClassRules: {
-    'task-overdue': params => {
-      const isOverdue = params.data.end_date && new Date(params.data.end_date) < new Date();
-      const isNotCompleted = params.data.status !== 'completed';
-      return isOverdue && isNotCompleted;
-    },
-    'task-risk': params => {
-      const isWithinRiskDays = params.data.end_date && (new Date(params.data.end_date) - new Date()) / (1000 * 60 * 60 * 24) <= (window.RISK_DAYS ?? RISK_DAYS);
-      const isNotCompleted = params.data.status !== 'completed';
-      return isWithinRiskDays && isNotCompleted;
-    },
-    'task-completed': params => params.data.status === 'completed',
-    'task-canceled': params => params.data.status === 'canceled'
-  }
+
+const gridOptions = {
+  // Dados e Configurações de Coluna
+  columnDefs: columnDefs, // Assume que você já melhorou o columnDefs separadamente
+  rowData: [],
+  
+  // Configurações Padrão para Todas as Colunas
+  defaultColDef: {
+    flex: 1, // Permite que as colunas se ajustem ao espaço disponível
+    minWidth: 100, // Largura mínima para evitar que as colunas fiquem muito pequenas
+    resizable: true, // Permite que o usuário redimensione as colunas
+    sortable: true, // Ativa a ordenação por padrão para todas as colunas
+    filter: true // Ativa a filtragem por padrão para todas as colunas
+  },
+  
+  // Configurações da Grid
+  pagination: true,
+  paginationPageSize: 50,
+  rowSelection: 'multiple',
+  
+  // Regras de Classe para Estilização de Linhas
+  rowClassRules: {
+    // Linha atrasada: se tiver data de fim no passado e não estiver completa
+    'task-overdue': params => {
+      const isOverdue = params.data.end_date && new Date(params.data.end_date) < new Date();
+      return isOverdue && params.data.status !== 'completed';
+    },
+    // Linha em risco: se tiver data de fim próxima e não estiver completa
+    'task-risk': params => {
+      const riskDays = window.RISK_DAYS ?? 3; // Usa a variável global ou 3 como fallback
+      const timeDiff = params.data.end_date ? (new Date(params.data.end_date) - new Date()) : Infinity;
+      const isWithinRiskDays = timeDiff / (1000 * 60 * 60 * 24) <= riskDays;
+      return isWithinRiskDays && params.data.status !== 'completed';
+    },
+    // Linha completa: se o status for 'completed'
+    'task-completed': params => params.data.status === 'completed',
+    // Linha cancelada: se o status for 'canceled'
+    'task-canceled': params => params.data.status === 'canceled'
+  }
 };
-  function safeSetRowData(gridResult, gridOptions, rows) {
+
+function safeSetRowData(gridResult, gridOptions, rows) {
     const api = (gridResult && gridResult.api) ? gridResult.api : (gridOptions && gridOptions.api ? gridOptions.api : null);
     if (api && typeof api.setRowData === 'function') {
       api.setRowData(rows);

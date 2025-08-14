@@ -28,11 +28,9 @@ urlpatterns = [
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='/users/login/'), name='logout'),
 
+    path('profile/', UserProfileView.as_view(), name='profile'),
     #Adress
     path('adress/new/', AdressCreateView.as_view(), name='adress-create'),
-
-
-    path('profile/', UserProfileView.as_view(), name='profile'),
 
     # URLs para métricas:
     path('metrics/', UserMetricsDashboardView.as_view(), name='user-metrics-admin'),          # Dashboard admin (view template)
