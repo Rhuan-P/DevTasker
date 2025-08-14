@@ -61,12 +61,15 @@ class UserCreateView(CreateView):
     template_name = 'users/user_form.html'
     success_url = reverse_lazy('adress-create')
 
-class UserUpdateView(LoginRequiredMixin, UpdateView):
+               
+class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = User
     form_class = CustomUserChangeForm
     template_name = 'users/user_form.html'
     success_url = reverse_lazy('profile')
-
+    def test_func(self):
+        user_to_be_updated = self.get_object()
+        return self.request.user.is_staff or user_to_be_updated == self.request.user        
 class UserDeleteView(DeleteView):
     model = User
     template_name = 'users/user_confirm_delete.html'
