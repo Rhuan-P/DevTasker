@@ -1,90 +1,49 @@
 {% extends "base.html" %}
+{% block title %}Detalhes do Projeto{% endblock %}
+
 {% block content %}
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Detalhes do Projeto</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-    
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow-x: hidden;
-    }
-    
-    .card {
-      background: white;
-      border-radius: 1rem;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      padding: 2rem;
-      max-width: 600px;
-      width: 100%;
-    }
-    
-    .btn {
-      display: inline-block;
-      padding: 0.5rem 1rem;
-      margin-top: 1rem;
-      border-radius: 0.5rem;
-      text-decoration: none;
-      color: white;
-      background-color: #4f46e5;
-      transition: background-color 0.3s;
-    }
-    
-    .btn:hover {
-      background-color: #4338ca;
-    }
-    
-    .btn-secondary {
-      background-color: #6b7280;
-    }
-    
-    .btn-secondary:hover {
-      background-color: #4b5563;
-    }
+<section class="min-h-[60vh] flex items-center justify-center">
+  <div class="w-full max-w-3xl bg-white rounded-xl shadow-lg p-8 space-y-6">
 
-    .info-item {
-      margin-bottom: 1rem;
-    }
+    <!-- Título -->
+    <h1 class="text-3xl font-bold text-gray-800">Detalhes do Projeto</h1>
 
-    .info-item strong {
-      display: inline-block;
-      width: 150px; /* Largura fixa para alinhamento */
-    }
-  </style>
-</head>
-<body>
-  <div class="container mx-auto max-w-7xl px-4 py-8">
-    <div class="card mx-auto">
-      <h1 class="text-3xl font-bold mb-4">Detalhes do Projeto</h1>
-      
-      <div class="info-item">
-        <strong>Nome:</strong> {{ project.name }}
+    <!-- Informações -->
+    <div class="space-y-4 text-gray-700">
+      <div>
+        <span class="inline-block font-semibold w-40">Nome:</span>
+        {{ project.name }}
       </div>
-      <div class="info-item">
-        <strong>Descrição:</strong> {{ project.description }}
+
+      <div>
+        <span class="inline-block font-semibold w-40">Responsável:</span>
+        {{ project.owner }}
       </div>
-      <div class="info-item">
-        <strong>Data de Início:</strong> {{ project.start_date }}
+
+      <div>
+        <span class="inline-block font-semibold w-40">Descrição:</span>
+        {{ project.description }}
       </div>
-      <div class="info-item">
-        <strong>Data de Fim:</strong> {{ project.end_date }}
+      <div>
+        <span class="inline-block font-semibold w-40">Data de Início:</span>
+        {{ project.start_date }}
       </div>
-      <div class="info-item">
-        <strong>Status:</strong> {{ project.get_status_display }}
+      <div>
+        <span class="inline-block font-semibold w-40">Data de Fim:</span>
+        {{ project.end_date }}
       </div>
-      
-      <div class="info-item">
-        <strong>Participantes:</strong>
+      <div>
+        <span class="inline-block font-semibold w-40 
+    {% if project.status == 'in_progress' %}text-yellow-500
+    {% elif project.status == 'completed' %}text-green-500
+    {% elif project.status == 'cancelled' %}text-red-500
+    {% elif project.status == 'pending' %}text-orange-500
+    {% endif %}">Status:
+        {{ project.get_status_display }}
+        </span>
+      </div>
+      <div>
+        <span class="inline-block font-semibold w-40 align-top">Participantes:</span>
         <ul class="list-disc pl-5">
           {% for participant in project.participants.all %}
             <li>{{ participant }}</li>
@@ -93,13 +52,49 @@
           {% endfor %}
         </ul>
       </div>
-      
-      <div class="flex justify-between mt-4">
-        <a href="{% url 'project-edit' project.pk %}" class="btn">Editar</a>
-        <a href="{% url 'project-list' %}" class="btn btn-secondary">Voltar</a>
-      </div>
     </div>
+
+    <!-- Ações -->
+    <div class="flex flex-col sm:flex-row justify-between gap-4 pt-4">
+      {%if project.owner == request.user%}
+      <a href="{% url 'project-edit' project.pk %}" class="w-full sm:w-auto text-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg shadow transition">
+        Editar
+      </a>
+      {% endif %}
+      <a href="javascript:history.back()" class="w-full sm:w-auto text-center bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-lg shadow transition">
+        Voltar
+      </a>
+    </div>
+    <div class="mt-8">
+  <h2 class="text-xl font-semibold mb-4 text-gray-800">Tarefas deste Projeto</h2>
+
+ <a href="{% url 'task-create' project.pk %}"
+   class="inline-block mb-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition">
+   Adicionar Tarefa
+</a>
+
+  
+  {% if tasks %}
+    <ul class="space-y-4">
+      {% for task in tasks %}
+        <li class="p-4 border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition">
+          <h3 class="text-lg font-bold text-indigo-600">{{ task.name }}</h3>
+          <p class="text-gray-600">{{ task.description|default:"Sem descrição" }}</p>
+          <p class="text-sm text-gray-500 mt-1">Responsável: 
+            {{ task.assigned_to }}
+          </p>
+          {% if request.user == task.assigned_to or request.user == task.owner or request.user == project.owner %}
+              <a href="{% url 'task-detail' task.pk %}" class="text-indigo-600 hover:underline text-sm">Ver detalhes</a>
+          {%endif%}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-gray-500">Nenhuma tarefa registrada para este projeto ainda.</p>
+  {% endif %}
+</div>
+
+
   </div>
-</body>
-</html>
+</section>
 {% endblock %}

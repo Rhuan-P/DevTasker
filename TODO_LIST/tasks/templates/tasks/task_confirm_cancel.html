@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Cancelar Tarefa{% endblock %}
+
+{% block content %}
+<section class="min-h-[60vh] flex items-center justify-center px-4 py-10">
+  <div class="w-full max-w-2xl bg-white rounded-xl shadow-lg p-8 space-y-6">
+    <div class="flex flex-col items-center text-center space-y-4">
+      <div class="bg-red-100 p-4 rounded-full">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </div>
+      <h1 class="text-2xl font-bold text-gray-800">Cancelar Tarefa</h1>
+      <p class="text-gray-700">
+        Deseja cancelar a tarefa <strong class="text-indigo-600">"{{ object.name }}"</strong>?
+      </p>
+    </div>
+    <form method="post" class="flex flex-col sm:flex-row justify-center gap-4 pt-4">
+      {% csrf_token %}
+      <button type="submit" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg shadow transition">
+        Sim, cancelar
+      </button>
+      <a href="javascript:history.back()" class="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg shadow transition">
+        Voltar
+      </a>
+    </form>
+  </div>
+</section>
+{% endblock %}

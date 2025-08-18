@@ -1,7 +1,16 @@
 [project]
-name = "classwork-plataform"
+name = "DEVTASKER"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "countries>=0.2.0",
+    "django>=5.2.5",
+    "django-countries>=7.6.1",
+]
+
+[tool.uv.workspace]
+members = [
+    "TODO_LIST/DEVTASKER",
+]

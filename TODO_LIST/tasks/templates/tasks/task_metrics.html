@@ -1,0 +1,403 @@
+{% extends "base.html" %}
+{% block title %}Dashboard de Tarefas{% endblock %}
+{% block page_title %}Métricas & Dashboard{% endblock %}
+
+{% block content %}
+<style>
+  .chart-container { max-height: 500px; }
+  .chart-container canvas { max-width: 100% !important; max-height: 100%  !important; display: block; }
+
+  /* destaque visual para linhas da grid */
+  .task-risk { background-color: #eeb222af !important; }      /* amarelo claro */
+  .task-overdue { background-color: #e66666af !important; }    /* vermelho claro */
+  .task-completed { opacity: 0.95; }
+
+  /* badge simples dentro cells */
+  .badge { display:inline-block; padding:0.18rem 0.5rem; border-radius:999px; font-size:0.75rem; font-weight:600; }
+  .badge-risk { background:#f59e0b; color:white; }
+  .badge-overdue { background:#ef4444; color:white; }
+</style>
+
+<div class="max-w-6xl mx-auto p-6 space-y-6">
+
+  <!-- Cards métricas (adicionado Em risco e Tempo médio) -->
+  <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+    <div class="p-4 bg-white rounded shadow text-center">
+      <div class="text-sm text-gray-500">Total de tarefas</div>
+      <div id="card-total" class="text-2xl font-bold text-indigo-600">—</div>
+    </div>
+    <div class="p-4 bg-white rounded shadow text-center">
+      <div class="text-sm text-gray-500">Concluídas (mês)</div>
+      <div id="card-completed" class="text-2xl font-bold text-green-600">—</div>
+    </div>
+    <div class="p-4 bg-white rounded shadow text-center">
+      <div class="text-sm text-gray-500">Atrasadas</div>
+      <div id="card-overdue" class="text-2xl font-bold text-red-600">—</div>
+    </div>
+    <div class="p-4 bg-white rounded shadow text-center">
+      <div class="text-sm text-gray-500">Em risco ({{ risk_days|default:3 }} dias)</div>
+      <div id="card-risk" class="text-2xl font-bold text-amber-600">—</div>
+    </div>
+    <div class="p-4 bg-white rounded shadow text-center">
+      <div class="text-sm text-gray-500">Tempo médio</div>
+      <div id="card-avg-time" class="text-2xl font-bold text-gray-800">—</div>
+    </div>
+  </div>
+
+  <!-- Gráficos -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="p-4 bg-white rounded shadow chart-container">
+      <h3 class="font-semibold mb-2">Distribuição por Status</h3>
+      <div><canvas id="statusChart"></canvas></div>
+      <div id="status-empty" class="mt-2 text-sm text-gray-500 hidden">Nenhum dado de status disponível.</div>
+    </div>
+
+    <div class="p-4 bg-white rounded shadow chart-container">
+      <h3 class="font-semibold mb-2">Distribuição por Prioridade</h3>
+      <div><canvas id="priorityChart"></canvas></div>
+      <div id="priority-empty" class="mt-2 text-sm text-gray-500 hidden">Nenhum dado de prioridade disponível.</div>
+    </div>
+  </div>
+
+  <!-- Tabela AG Grid -->
+  <div class="p-4 bg-white rounded shadow">
+    <h3 class="font-semibold mb-2">Tarefas (Tabela)</h3>
+    <div id="myGrid" class="ag-theme-alpine" style="height: 360px; width: 100%;"></div>
+  </div>
+
+  <!-- Opcional: lista curta de tarefas em risco -->
+  <div id="risk-list-container" class="p-4 bg-white rounded shadow hidden">
+    <h4 class="font-semibold mb-2">Tarefas em risco</h4>
+    <ul id="risk-list" class="space-y-2 text-sm"></ul>
+  </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css" />
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.4/dist/ag-grid-community.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+<script>
+  const metricsUrl = "{% url 'task-metrics' %}";
+  const tasksApiUrl = "{% url 'task-list-api' %}";
+
+  // mapeamentos
+  const STATUS_LABELS = {
+    'IN_PROGRESS': 'Em andamento','in_progress': 'Em andamento',
+    'COMPLETED': 'Concluído','completed': 'Concluído',
+    'CANCELED': 'Cancelado','canceled': 'Cancelado'
+  };
+  const PRIORITY_LABELS = {'HIGH':'Alto','MEDIUM':'Médio','LOW':'Baixo'};
+
+  async function fetchJSON(url) {
+    const res = await fetch(url, { credentials: 'same-origin' });
+    if (!res.ok) throw new Error(`${url} -> HTTP ${res.status}`);
+    return res.json();
+  }
+
+  function extractName(field) {
+    if (!field) return '—';
+    if (typeof field === 'string') return field || '—';
+    if (typeof field === 'object') {
+      if (field.name?.trim()) return field.name;
+      if (field.email) return field.email;
+      if (field.id) return `Usuário #${field.id}`;
+      return '—';
+    }
+    return String(field);
+  }
+
+  function normalizeCounts(items, keyName, fallbackMap) {
+    if (!Array.isArray(items)) return [];
+    return items.map(i => {
+      if (!i) return null;
+      const count = Number(i.count || 0);
+      const value = i[keyName] ?? i.value ?? null;
+      const label = i.label ?? (value!=null ? (fallbackMap ? (fallbackMap[String(value).toUpperCase()] || String(value)) : String(value)) : '—');
+      return { value, label, count };
+    }).filter(Boolean);
+  }
+
+  const COLORS = ['#60a5fa','#34d399','#f59e0b','#f87171','#c084fc','#93c5fd','#a78bfa','#fbbf24'];
+
+  let statusChartInstance = null;
+  let priorityChartInstance = null;
+
+  function destroyIfExists(chart) { if (chart && typeof chart.destroy === 'function') chart.destroy(); }
+  function resetCanvasGetCtx(id) {
+    const old = document.getElementById(id);
+    const parent = old.parentNode;
+    parent.removeChild(old);
+    const c = document.createElement('canvas');
+    c.id = id;
+    c.style.width = '100%';
+    c.style.height = '200px';
+    parent.appendChild(c);
+    return c.getContext('2d');
+  }
+
+  // GRID: definimos regras de classe para destacar linhas
+  const RISK_DAYS = 3; // fallback; será sobrescrito se a API voltar risk_days
+const columnDefs = [
+  { 
+    field: 'name', 
+    headerName: 'Tarefa', 
+    flex: 1.2, 
+    width: 200, 
+    sortable: true, 
+    filter: true, 
+    tooltipField: 'name' 
+  },
+  { 
+    headerName: 'Projeto', 
+    field: 'project',
+    valueGetter: p => p.data.project?.name || '—', 
+    flex: 1.2,
+    sortable: true, 
+    filter: true 
+  },
+  { 
+    headerName: 'Criador', 
+    field: 'owner',
+    valueGetter: p => extractName(p.data.owner), 
+    flex: 1.2,
+    sortable: true, 
+    filter: true 
+  },
+  { 
+    headerName: 'Atribuído', 
+    field: 'assigned_to',
+    valueGetter: p => extractName(p.data.assigned_to), 
+    flex: 1.2,
+    sortable: true, 
+    filter: true 
+  },
+  { 
+  headerName: 'Status',
+    field: 'status', 
+    flex: 1.2,
+    sortable: true, 
+    filter: true, 
+    valueFormatter: p => p.data?.status_display || STATUS_LABELS[(p.value || '').toUpperCase()] || p.value || '—' 
+  },
+  { 
+  headerName: 'Prioridade',
+    field: 'priority', 
+    flex: 1,
+    sortable: true, 
+    filter: true, 
+    valueFormatter: p => p.data?.priority_display || PRIORITY_LABELS[(p.value || '').toUpperCase()] || p.value || '—' 
+  },
+  { 
+    headerName: 'Início', 
+    field: 'start_date', 
+   flex: 1,
+    sortable: true, 
+    filter: 'agDateColumnFilter',
+    valueFormatter: p => p.data.start_date ? new Date(p.data.start_date).toLocaleDateString('pt-BR') : '—'
+  },
+  { 
+    headerName: 'Fim', 
+    field: 'end_date', 
+    flex: 1, 
+    sortable: true, 
+    filter: 'agDateColumnFilter',
+    valueFormatter: p => p.data.end_date ? new Date(p.data.end_date).toLocaleDateString('pt-BR') : '—'
+  },
+  { 
+    headerName: 'Concluida', 
+    field: 'completed_at', 
+    flex: 1,
+    sortable: true, 
+    filter: 'agDateColumnFilter',
+    valueFormatter: p => p.data.completed_at ? new Date(p.data.completed_at).toLocaleString('pt-BR') : '—'
+  },
+];
+
+
+const gridOptions = {
+  // Dados e Configurações de Coluna
+  columnDefs: columnDefs, // Assume que você já melhorou o columnDefs separadamente
+  rowData: [],
+  
+  // Configurações Padrão para Todas as Colunas
+  defaultColDef: {
+    flex: 1, // Permite que as colunas se ajustem ao espaço disponível
+    minWidth: 100, // Largura mínima para evitar que as colunas fiquem muito pequenas
+    resizable: true, // Permite que o usuário redimensione as colunas
+    sortable: true, // Ativa a ordenação por padrão para todas as colunas
+    filter: true // Ativa a filtragem por padrão para todas as colunas
+  },
+  
+  // Configurações da Grid
+  pagination: true,
+  paginationPageSize: 50,
+  rowSelection: 'multiple',
+  
+  // Regras de Classe para Estilização de Linhas
+  rowClassRules: {
+    // Linha atrasada: se tiver data de fim no passado e não estiver completa
+    'task-overdue': params => {
+      const isOverdue = params.data.end_date && new Date(params.data.end_date) < new Date();
+      return isOverdue && params.data.status !== 'completed';
+    },
+    // Linha em risco: se tiver data de fim próxima e não estiver completa
+    'task-risk': params => {
+      const riskDays = window.RISK_DAYS ?? 3; // Usa a variável global ou 3 como fallback
+      const timeDiff = params.data.end_date ? (new Date(params.data.end_date) - new Date()) : Infinity;
+      const isWithinRiskDays = timeDiff / (1000 * 60 * 60 * 24) <= riskDays;
+      return isWithinRiskDays && params.data.status !== 'completed';
+    },
+    // Linha completa: se o status for 'completed'
+    'task-completed': params => params.data.status === 'completed',
+    // Linha cancelada: se o status for 'canceled'
+    'task-canceled': params => params.data.status === 'canceled'
+  }
+};
+
+function safeSetRowData(gridResult, gridOptions, rows) {
+    const api = (gridResult && gridResult.api) ? gridResult.api : (gridOptions && gridOptions.api ? gridOptions.api : null);
+    if (api && typeof api.setRowData === 'function') {
+      api.setRowData(rows);
+      return true;
+    }
+    // fallback: tentar setGridOption (algumas builds expõem método)
+    if (gridResult && typeof gridResult.setGridOption === 'function') {
+      try { gridResult.setGridOption('rowData', rows); return true; } catch(e) {}
+    }
+    // fallback: atribuir rowData e deixar a grid renderizar se possível
+    if (gridOptions) { gridOptions.rowData = rows; return false; }
+    return false;
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const eGridDiv = document.getElementById('myGrid');
+    const gridResult = agGrid.createGrid(eGridDiv, gridOptions);
+
+    try {
+      const [metrics, tasks] = await Promise.all([
+        fetchJSON(metricsUrl).catch(e => { console.warn('metrics failed', e); return null; }),
+        fetchJSON(tasksApiUrl).catch(e => { console.warn('tasks failed', e); return null; })
+      ]);
+
+      // Atualiza risco global (se a API devolver risk_days)
+      if (metrics && metrics.risk_days != null) {
+        window.RISK_DAYS = metrics.risk_days;
+        // atualiza label do card de risco (se quiser)
+      }
+
+      // Cards
+      document.getElementById('card-total').textContent = metrics?.total_tasks ?? '—';
+      document.getElementById('card-completed').textContent = metrics?.completed_this_month ?? '—';
+      document.getElementById('card-overdue').textContent = metrics?.overdue_tasks ?? '—';
+      document.getElementById('card-risk').textContent = metrics?.tasks_in_risk_count ?? '—';
+      const avg = metrics?.avg_completion_time_days;
+      document.getElementById('card-avg-time').textContent = (avg != null) ? `${Number(avg).toFixed(1)} dias` : '—';
+
+// SHOW risk sample list (opcional)
+if (metrics?.tasks_in_risk && metrics.tasks_in_risk.length) {
+  const list = document.getElementById('risk-list');
+  list.innerHTML = '';
+  metrics.tasks_in_risk.forEach(t => {
+    const el = document.createElement('li');
+    el.innerHTML = `<strong class="text-sm">${t.name}</strong> — ${t.project?.name ?? '—'} — até ${t.end_date ? new Date(t.end_date).toLocaleDateString() : '—'} <span class="badge badge-risk">Risco</span>`;
+    list.appendChild(el);
+  });
+  document.getElementById('risk-list-container').classList.remove('hidden');
+}
+
+      // Charts: status
+      const normalizedStatus = normalizeCounts(metrics?.status_counts ?? [], 'status', STATUS_LABELS);
+      if (normalizedStatus.length) {
+        const ctx = resetCanvasGetCtx('statusChart');
+        destroyIfExists(statusChartInstance);
+        statusChartInstance = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: normalizedStatus.map(i => i.label),
+            datasets: [{
+              data: normalizedStatus.map(i => i.count),
+              backgroundColor: normalizedStatus.map((_,i) => COLORS[i % COLORS.length])
+            }]
+          },
+          options: { responsive:true, maintainAspectRatio:true, plugins:{ legend:{ position:'bottom' } } }
+        });
+        document.getElementById('status-empty').classList.add('hidden');
+      } else {
+        document.getElementById('status-empty').classList.remove('hidden');
+      }
+
+      // Charts: priority (barra horizontal) com legenda por item
+      const normalizedPriority = normalizeCounts(metrics?.priority_counts ?? [], 'priority', PRIORITY_LABELS);
+      if (normalizedPriority.length) {
+        const ctx = resetCanvasGetCtx('priorityChart');
+        destroyIfExists(priorityChartInstance);
+        priorityChartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: normalizedPriority.map(i => i.label),
+            datasets: [{
+              data: normalizedPriority.map(i => i.count),
+              backgroundColor: normalizedPriority.map((_,i) => COLORS[i % COLORS.length])
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            indexAxis: 'y',
+            plugins: {
+              legend: {
+                display: true,
+                position: 'bottom',
+                labels: {
+                  generateLabels: chart => {
+                    const d = chart.data;
+                    if (!d || !d.labels || !d.datasets || !d.datasets.length) return [];
+                    const set = d.datasets[0];
+                    return d.labels.map((lab,i)=>({
+                      text: lab||'—',
+                      fillStyle: set.backgroundColor?.[i] ?? COLORS[i % COLORS.length],
+                      hidden: false,
+                      index: i
+                    }));
+                  }
+                }
+              }
+            }
+          }
+        });
+        document.getElementById('priority-empty').classList.add('hidden');
+      } else {
+        document.getElementById('priority-empty').classList.remove('hidden');
+      }
+
+      // Popula AG Grid
+      const rows = Array.isArray(tasks) ? tasks : (metrics?.sample_tasks ?? []);
+      const ok = safeSetRowData(gridResult, gridOptions, rows);
+      if (!ok) {
+        console.warn('AG Grid API não estava disponível para setRowData; defini rowData em gridOptions como fallback.');
+      }
+
+    } catch (err) {
+      console.error('Erro ao inicializar dashboard:', err);
+      const container = document.querySelector('.max-w-6xl');
+      if (container) {
+        container.insertAdjacentHTML('afterbegin', `
+          <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+            <p class="text-yellow-800">O dashboard não pôde carregar as APIs — verifique autenticação / rotas.</p>
+            <pre class="text-xs text-red-600">${(err && err.message) ? err.message : String(err)}</pre>
+          </div>`);
+      }
+    }
+  });
+
+
+  
+</script>
+
+
+
+
+{% endblock %}

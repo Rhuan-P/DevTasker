@@ -1,6 +1,7 @@
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from .models import Project
+from tasks.models import Task
 from .forms import ProjectForm
 from django.shortcuts import render
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -16,6 +17,8 @@ class ProjectListView(LoginRequiredMixin, ListView):
         return Project.objects.filter(
             models.Q(owner=self.request.user) | models.Q(participants=self.request.user)
         ).distinct()
+    
+    
 
 class ProjectAccessMixin(LoginRequiredMixin):
     def dispatch(self, request, *args, **kwargs):
@@ -29,8 +32,18 @@ class ProjectDetailView(ProjectAccessMixin, DetailView):
     template_name = 'projects/project_detail.html'
     context_object_name = 'project'
 
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic.edit import CreateView
+    def get_queryset(self):
+        
+        return Project.objects.filter(
+            models.Q(owner=self.request.user) | models.Q(participants=self.request.user)
+        ).distinct()
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # self.object é o projeto que está sendo exibido
+        context['tasks'] = Task.objects.filter(project=self.object)
+        return context
+
 
 class ProjectCreateView(LoginRequiredMixin, CreateView):
     model = Project

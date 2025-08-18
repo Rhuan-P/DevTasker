@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Perfil do Usuário{% endblock %}
+
+{% block content %}
+<section class="min-h-[60vh] flex items-center justify-center">
+  <div class="w-full max-w-lg bg-white rounded-xl shadow-lg p-8 space-y-6">
+
+    <!-- Ações para admin -->
+    {% if user.is_superuser %}
+      <a href="{% url 'user-list' %}" 
+         class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition">
+        Listar Usuários
+      </a>
+    {% endif %}
+
+    <!-- Mudar senha -->
+    <a href="{% url 'user-edit' user.pk %}" 
+       class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition">
+      Editar
+    </a>
+
+    <!-- Título -->
+    <h1 class="text-3xl font-bold text-gray-800 text-center">
+      Perfil de {{ user.name }}
+    </h1>
+
+    <!-- Informações -->
+    <ul class="space-y-2 text-gray-700">
+      <li><span class="font-semibold">Nome:</span> {{ user.name }}</li>
+      <li><span class="font-semibold">Email:</span> {{ user.email }}</li>
+      <li><span class="font-semibold">Ativo:</span> {{ user.is_active }}</li>
+      <li><span class="font-semibold">Superuser:</span> {{ user.is_superuser }}</li>
+      <li><span class="font-semibold">Staff:</span> {{ user.is_staff }}</li>
+      <li><span class="font-semibold">Último Login:</span> {{ user.last_login }}</li>
+    </ul>
+
+    <!-- Links extras -->
+    <div class="flex flex-col sm:flex-row gap-4 pt-4">
+      <a href="{% url 'task-list' %}" 
+         class="w-full sm:w-auto text-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg shadow transition">
+        Minhas Tarefas
+      </a>
+      <a href="{% url 'project-list' %}" 
+         class="w-full sm:w-auto text-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg shadow transition">
+        Meus Projetos
+      </a>
+    </div>
+
+  </div>
+</section>
+{% endblock %}

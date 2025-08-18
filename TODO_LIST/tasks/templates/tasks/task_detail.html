@@ -1,106 +1,58 @@
 {% extends "base.html" %}
+{% block title %}Detalhes - {{ task.name }}{% endblock %}
+{% block page_title %}Detalhes da Tarefa{% endblock %}
+
 {% block content %}
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Detalhes da Tarefa</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-    
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      overflow-x: hidden;
-      padding: 2rem;
-    }
-    
-    .container {
-      max-width: 800px;
-      width: 100%;
-      background: white;
-      border-radius: 1rem;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      padding: 2rem;
-    }
+<div class="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow space-y-4">
+  <h2 class="text-2xl font-semibold">{{ task.name }}</h2>
 
-    .info-item {
-      margin-bottom: 1rem;
-    }
+  <dl class="grid grid-cols-1 gap-2">
+    <div>
+      <dt class="font-medium text-sm">Projeto</dt>
+      <dd class="text-sm">{{ task.project.name }}</dd>
+    </div>
+    <div>
+      <dt class="font-medium text-sm">Descrição</dt>
+      <dd class="text-sm">{{ task.description|linebreaksbr|default:"—" }}</dd>
+    </div>
+    <div>
+      <dt class="font-medium text-sm">Status</dt>
+      <dd class="text-sm">{{ task.get_status_display }}</dd>
+    </div>
+    <div>
+      <dt class="font-medium text-sm">Prioridade</dt>
+      <dd class="text-sm">{{ task.get_priority_display }}</dd>
+    </div>
+    <div>
+      <dt class="font-medium text-sm">Responsável</dt>
+      <dd class="text-sm">{{ task.assigned_to.name|default:"—" }}</dd>
+    </div>
+    <div>
+      <dt class="font-medium text-sm">Proprietário</dt>
+      <dd class="text-sm">{{ task.owner.name|default:"—" }}</dd>
+    </div>
+    <div>
+      <dt class="font-medium text-sm">Início / Fim</dt>
+      <dd class="text-sm">{{ task.start_date|date:"d/m/Y" }} — {{ task.end_date|date:"d/m/Y" }}</dd>
+    </div>
+    <div>
+      <dt class="font-medium text-sm">Completada em</dt>
+      <dd class="text-sm">{{ task.completed_at|date:"d/m/Y H:i" }}</dd>
+    </div>
+  </dl>
 
-    .info-item strong {
-      display: inline-block;
-      width: 150px; /* Largura fixa para alinhamento */
-    }
-
-    .btn {
-      display: inline-block;
-      padding: 0.5rem 1rem;
-      margin-top: 1rem;
-      border-radius: 0.5rem;
-      text-decoration: none;
-      color: white;
-      background-color: #4f46e5;
-      transition: background-color 0.3s;
-    }
-    
-    .btn:hover {
-      background-color: #4338ca;
-    }
-    
-    .btn-secondary {
-      background-color: #6b7280;
-    }
-    
-    .btn-secondary:hover {
-      background-color: #4b5563;
-    }
-  </style>
-</head>
-<body>
-  <div class="container mx-auto">
-    <h1 class="text-3xl font-bold mb-4">Detalhes da Tarefa</h1>
-    
-    <div class="info-item">
-      <strong>Nome:</strong> {{ task.name }}
-    </div>
-    <div class="info-item">
-      <strong>Projeto:</strong> {{ task.project.name }}
-    </div>
-    <div class="info-item">
-      <strong>Descrição:</strong> {{ task.description }}
-    </div>
-    <div class="info-item">
-      <strong>Data de início:</strong> {{ task.start_date }}
-    </div>
-    <div class="info-item">
-      <strong>Data de fim:</strong> {{ task.end_date }}
-    </div>
-    <div class="info-item">
-      <strong>Status:</strong> {{ task.get_status_display }}
-    </div>
-    <div class="info-item">
-      <strong>Responsável:</strong> {{ task.assigned_to }}
-    </div>
-    <div class="info-item">
-      <strong>Prioridade:</strong> {{ task.get_priority_display }}
-    </div>
-    <div class="info-item">
-      <strong>Proprietário:</strong> {{ task.owner }}
-    </div>
-   
-
-    <div class="mt-4">
-      <a href="{% url 'task-edit' task.pk %}" class="btn">Editar</a>
-      <a href="{% url 'task-list' %}" class="btn btn-secondary">Voltar</a>
-    </div>
+  <div class="flex gap-3 mt-4">
+    {% if task.status != 'completed' %}
+      <a href="{% url 'task-complete' task.pk %}" class="bg-green-600 text-white px-4 py-2 rounded">Concluir</a>
+    {% endif %}
+    {% if task.status != 'canceled' %}
+      <a href="{% url 'task-cancel' task.pk %}" class="bg-red-600 text-white px-4 py-2 rounded">Cancelar</a>
+    {% endif %}
+    {% if task.owner == request.user %}
+      <a href="{% url 'task-update' task.pk %}" class="bg-indigo-600 text-white px-4 py-2 rounded">Editar</a>
+      <a href="{% url 'task-delete' task.pk %}" class="bg-gray-200 px-4 py-2 rounded">Deletar</a>
+    {% endif %}
+    <a href="javascript:history.back()" class="bg-gray-100 px-4 py-2 rounded">Voltar</a>
   </div>
-</body>
-</html>
+</div>
 {% endblock %}

@@ -1,5 +1,38 @@
-<h1>Detalhes do Usuário</h1>
-<p>Email: {{ user_obj.email }}</p>
-<p>Nome: {{ user_obj.name }}</p>
-<a href="{% url 'user-edit' user_obj.pk %}">Editar</a> |
-<a href="{% url 'user-list' %}">Voltar para lista</a>
+{% extends "base.html" %}
+
+{% block title %}Detalhes do Usuário{% endblock %}
+
+{% block content %}
+<section class="min-h-[60vh] flex items-center justify-center">
+  <div class="w-full max-w-lg bg-white rounded-xl shadow-lg p-8 space-y-6">
+
+    <!-- Título -->
+    <h1 class="text-3xl font-bold text-gray-800">Detalhes do Usuário</h1>
+
+    <!-- Informações -->
+    <div class="space-y-4 text-gray-700">
+      <div>
+        <span class="inline-block font-semibold w-32">Email:</span>
+        {{ user_obj.email }}
+      </div>
+      <div>
+        <span class="inline-block font-semibold w-32">Nome:</span>
+        {{ user_obj.name }}
+      </div>
+    </div>
+
+    <!-- Ações -->
+    <div class="flex flex-col sm:flex-row gap-4 pt-4">
+      <a href="{% url 'user-edit' user_obj.pk %}" 
+         class="w-full sm:w-auto text-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg shadow transition">
+        Editar
+      </a>
+      <a href="{% url 'user-list' %}" 
+         class="w-full sm:w-auto text-center bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-6 rounded-lg shadow transition">
+        Voltar para lista
+      </a>
+    </div>
+
+  </div>
+</section>
+{% endblock %}

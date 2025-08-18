@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard de Métricas - Usuários{% endblock %}
+
+{% block content %}
+<section class="min-h-[80vh] p-6 space-y-10 bg-gray-50">
+
+  <h1 class="text-4xl font-extrabold text-indigo-700 mb-8 border-b-2 border-indigo-400 pb-3">
+    Dashboard Geral de Usuários
+  </h1>
+
+  <!-- Cards de métricas resumidas -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
+    <div class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center justify-center hover:shadow-lg transition-shadow duration-300">
+      <h2 class="font-semibold text-lg text-gray-700 mb-3">Total de Usuários</h2>
+      <p id="totalUsers" class="text-4xl font-bold text-indigo-600">--</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center justify-center hover:shadow-lg transition-shadow duration-300">
+      <h2 class="font-semibold text-lg text-gray-700 mb-3">Usuários Staff</h2>
+      <p id="staffUsers" class="text-4xl font-bold text-indigo-600">--</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center justify-center hover:shadow-lg transition-shadow duration-300">
+      <h2 class="font-semibold text-lg text-gray-700 mb-3">Novos Último Mês</h2>
+      <p id="newUsersLastMonth" class="text-4xl font-bold text-indigo-600">--</p>
+    </div>
+  </div>
+
+  <!-- Gráficos lado a lado (responsivo) -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h3 class="font-semibold text-2xl text-gray-800 mb-6 border-b border-gray-200 pb-2">
+        Usuários por País
+      </h3>
+      <canvas id="chartByCountry" class="w-full h-72"></canvas>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h3 class="font-semibold text-2xl text-gray-800 mb-6 border-b border-gray-200 pb-2">
+        Usuários por Gênero
+      </h3>
+      <canvas id="chartByGender" class="w-full h-72"></canvas>
+    </div>
+  </div>
+
+  <!-- Tabela usuários com ag-grid -->
+  <div class="bg-white rounded-lg shadow-md p-6 mt-12">
+    <h3 class="font-semibold text-2xl text-gray-800 mb-6 border-b border-gray-200 pb-2">
+      Lista de Usuários
+    </h3>
+    <div id="userGrid" class="ag-theme-alpine" style="height: 450px; width: 100%;"></div>
+  </div>
+
+</section>
+
+<!-- Scripts externos e estilos ag-grid -->
+<link href="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/styles/ag-grid.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/styles/ag-theme-alpine.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
+
+<script>
+  async function fetchMetrics() {
+    try {
+      const response = await fetch("{% url 'user-metrics-api' %}");
+      if (!response.ok) throw new Error('Erro ao buscar métricas');
+      return await response.json();
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  }
+
+  function renderCards(data) {
+    if (!data) return;
+    document.getElementById('totalUsers').textContent = data.total_users ?? '--';
+    document.getElementById('staffUsers').textContent = data.staff_count ?? '--';
+    document.getElementById('newUsersLastMonth').textContent = data.new_users_last_month ?? '--';
+  }
+
+  function renderCharts(data) {
+    if (!data) return;
+
+    // Usuários por país (barras horizontais)
+    const ctxCountry = document.getElementById('chartByCountry').getContext('2d');
+    new Chart(ctxCountry, {
+      type: 'bar',
+      data: {
+        labels: data.users_by_country.map(item => item.country || 'N/A'),
+        datasets: [{
+          label: 'Usuários',
+          data: data.users_by_country.map(item => item.count),
+          backgroundColor: 'rgba(99, 102, 241, 0.8)',
+          borderRadius: 4,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: true },
+          title: { display: false }
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            ticks: { precision: 0 },
+          },
+          y: { ticks: { autoSkip: false } }
+        }
+      }
+    });
+
+    // Usuários por gênero (pizza)
+    const ctxGender = document.getElementById('chartByGender').getContext('2d');
+    const genderColors = ['#4F46E5', '#6366F1', '#A5B4FC', '#818CF8', '#C7D2FE'];
+    new Chart(ctxGender, {
+      type: 'pie',
+      data: {
+        labels: data.users_by_gender.map(item => item.gender || 'N/A'),
+        datasets: [{
+          data: data.users_by_gender.map(item => item.count),
+          backgroundColor: genderColors.slice(0, data.users_by_gender.length),
+          borderWidth: 1,
+          borderColor: '#fff',
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { boxWidth: 16, padding: 10 }
+          }
+        }
+      }
+    });
+  }
+
+  async function renderUserGrid() {
+    try {
+      const response = await fetch("{% url 'user-list' %}?format=json");
+      if (!response.ok) throw new Error('Erro ao buscar usuários');
+      const users = await response.json();
+
+      const columnDefs = [
+        { field: 'id', headerName: 'ID', sortable: true, filter: true, width: 80 },
+        { field: 'name', headerName: 'Nome', sortable: true, filter: true, flex: 1 },
+        { field: 'email', headerName: 'Email', sortable: true, filter: true, flex: 1.5 },
+        {
+          field: 'country',
+          headerName: 'País',
+          valueGetter: params => params.data.country || 'Não informado',
+          sortable: true, filter: true, width: 150
+        },
+        {
+          field: 'gender',
+          headerName: 'Gênero',
+          valueGetter: params => params.data.gender || 'Não informado',
+          sortable: true, filter: true, width: 120
+        },
+        {
+          field: 'is_staff',
+          headerName: 'Staff',
+          valueGetter: params => params.data.is_staff ? 'Sim' : 'Não',
+          sortable: true, filter: true, width: 100,
+          cellClass: params => params.value === 'Sim' ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'
+        },
+      ];
+
+      const gridOptions = {
+        columnDefs,
+        rowData: users,
+        defaultColDef: { resizable: true, sortable: true, filter: true },
+        pagination: true,
+        paginationPageSize: 15,
+        animateRows: true,
+        rowSelection: 'single',
+        rowHeight: 50,
+        suppressMovableColumns: true
+      };
+
+      // Destrói grid antiga se existir
+      if (window.userGridInstance) {
+        window.userGridInstance.destroy();
+      }
+
+      // Cria grid com agGrid.createGrid
+      const eGridDiv = document.getElementById('userGrid');
+      window.userGridInstance = agGrid.createGrid(eGridDiv, gridOptions);
+
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function initDashboard() {
+    const metrics = await fetchMetrics();
+    renderCards(metrics);
+    renderCharts(metrics);
+    renderUserGrid();
+  }
+
+  window.addEventListener('DOMContentLoaded', initDashboard);
+</script>
+{% endblock %}
